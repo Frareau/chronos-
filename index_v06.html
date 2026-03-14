@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chronos — Timeline Storica v03</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #f5ecd7;
+    --parchment-dark: #e8d9b8;
+    --ink: #2c1810;
+    --ink-light: #5c3d2e;
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --red-wax: #8b1a1a;
+    --sidebar-w: 270px;
+    --header-h: 56px;
+    --ruler-h: 48px;
+    --row-h: 38px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'EB Garamond', serif;
+    background: var(--parchment);
+    color: var(--ink);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  header {
+    height: var(--header-h);
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+    flex-shrink: 0;
+    border-bottom: 3px solid var(--gold);
+    z-index: 100;
+  }
+  header h1 { font-family:'Cinzel',serif; color:var(--gold-light); font-size:1.15rem; letter-spacing:3px; flex:1; white-space:nowrap; }
+  .header-btn { background:transparent; border:1px solid var(--gold); color:var(--gold-light); font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; padding:5px 9px; cursor:pointer; transition:all .2s; border-radius:2px; white-space:nowrap; }
+  .header-btn:hover { background:var(--gold); color:var(--ink); }
+  .header-btn.accent { background:var(--gold); color:var(--ink); }
+
+  /* TIMELINE DROPDOWN */
+  .tl-selector-bar { background:#1a0c08; border-bottom:2px solid var(--gold); display:flex; align-items:center; padding:0 10px; gap:6px; min-height:36px; flex-shrink:0; z-index:90; position:relative; }
+  .tl-current-btn { font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:1px; color:var(--gold-light); background:transparent; border:1px solid var(--gold); padding:4px 10px; cursor:pointer; border-radius:2px; display:flex; align-items:center; gap:6px; transition:background .15s; white-space:nowrap; }
+  .tl-current-btn:hover { background:#ffffff15; }
+  .tl-current-btn .arrow { font-size:0.5rem; opacity:.7; transition:transform .2s; }
+  .tl-current-btn.open .arrow { transform:rotate(180deg); }
+  .tl-dropdown { position:absolute; top:100%; left:10px; min-width:200px; background:var(--ink); border:1px solid var(--gold); border-top:none; border-radius:0 0 4px 4px; z-index:200; display:none; box-shadow:0 6px 20px rgba(0,0,0,0.5); }
+  .tl-dropdown.open { display:block; }
+  .tl-dropdown-item { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; color:#ffffff88; padding:8px 12px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; transition:background .15s; border-bottom:1px solid #ffffff11; }
+  .tl-dropdown-item:last-child { border-bottom:none; }
+  .tl-dropdown-item:hover { background:#ffffff15; color:var(--gold-light); }
+  .tl-dropdown-item.active { color:var(--gold-light); }
+  .tl-dropdown-item .tl-item-del { color:#ffffff33; font-size:0.65rem; cursor:pointer; padding:2px 4px; border-radius:2px; }
+  .tl-dropdown-item .tl-item-del:hover { color:var(--red-wax); background:#ff000022; }
+  .tl-dropdown-add { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; color:var(--gold); padding:8px 12px; cursor:pointer; display:flex; align-items:center; gap:6px; background:#ffffff08; transition:background .15s; }
+  .tl-dropdown-add:hover { background:#ffffff18; }
+
+  /* FILTERS DROPDOWN */
+  .filters-bar { background:var(--parchment-dark); border-bottom:1px solid var(--gold); display:flex; align-items:center; padding:0 10px; gap:6px; flex-shrink:0; min-height:36px; position:relative; z-index:89; }
+  .filter-toggle-btn { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; color:var(--ink); background:var(--gold); border:none; padding:4px 10px; cursor:pointer; border-radius:2px; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  .filter-toggle-btn .arrow { font-size:0.5rem; transition:transform .2s; }
+  .filter-toggle-btn.open .arrow { transform:rotate(180deg); }
+  .filter-active-summary { font-family:'EB Garamond',serif; font-size:0.78rem; color:var(--ink-light); font-style:italic; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .filters-dropdown { position:absolute; top:100%; left:0; right:0; background:var(--parchment); border:1px solid var(--gold); border-top:none; z-index:200; display:none; box-shadow:0 6px 20px rgba(0,0,0,0.3); padding:10px 12px; }
+  .filters-dropdown.open { display:block; }
+  .filter-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  .filter-row:last-child { margin-bottom:0; }
+  .filter-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:1.5px; color:var(--ink-light); white-space:nowrap; flex-shrink:0; min-width:50px; }
+  .filter-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; border:1px solid currentColor; font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer; white-space:nowrap; transition:all .15s; }
+  .filter-chip.active { opacity:1; }
+  .filter-chip:not(.active) { opacity:0.4; }
+  .filter-chip:hover { opacity:1; }
+  .filter-sep { width:1px; height:18px; background:var(--gold); opacity:.3; flex-shrink:0; }
+  .filter-period-wrap { display:flex; align-items:center; gap:4px; }
+  .filter-period-input { width:64px; background:#fff; border:1px solid var(--parchment-dark); border-radius:3px; padding:3px 6px; font-family:'EB Garamond',serif; font-size:0.82rem; color:var(--ink); }
+  .filter-period-input:focus { outline:none; border-color:var(--gold); }
+  .filter-go { background:var(--gold); border:none; color:var(--ink); font-family:'Cinzel',serif; font-size:0.52rem; padding:4px 8px; cursor:pointer; border-radius:3px; letter-spacing:1px; }
+
+  .app-body { display:flex; flex:1; overflow:hidden; position:relative; }
+  aside { width:var(--sidebar-w); background:#2c1810ee; border-right:2px solid var(--gold); display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto; z-index:50; transition:transform .25s, width .25s; position:absolute; height:100%; }
+  aside.collapsed { transform:translateX(calc(-1 * var(--sidebar-w))); }
+  aside:not(.collapsed) + .sidebar-pull-tab { left:var(--sidebar-w); }
+  .timeline-area { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; margin-left:0; transition:margin-left .25s; }
+  .sidebar-section { padding:10px 12px; border-bottom:1px solid #ffffff22; }
+  .sidebar-title { font-family:'Cinzel',serif; color:var(--gold-light); font-size:0.58rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+  .category-item { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:3px; cursor:pointer; transition:background .15s; }
+  .category-item:hover { background:#ffffff15; }
+  .cat-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+  .cat-label { color:#e8d9b8; font-size:0.8rem; flex:1; }
+  .cat-count { color:#ffffff55; font-size:0.7rem; }
+  .cat-eye { color:#ffffff44; font-size:0.7rem; cursor:pointer; }
+  .cat-eye.hidden { color:#ffffff22; }
+  .cat-action-btn { color:#ffffff44; font-size:0.7rem; cursor:pointer; padding:1px 3px; border-radius:2px; transition:color .15s, background .15s; }
+  .cat-action-btn:hover { color:#fff; background:#ffffff22; }
+  .cat-del-btn:hover { color:#ff6666 !important; background:#ff000022 !important; }
+  .zoom-controls { padding:10px 12px; border-bottom:1px solid #ffffff22; }
+  .zoom-label { font-family:'Cinzel',serif; color:var(--gold-light); font-size:0.58rem; letter-spacing:2px; margin-bottom:8px; }
+  .zoom-row { display:flex; align-items:center; gap:6px; }
+  .zoom-btn { width:28px; height:28px; background:#ffffff15; border:1px solid var(--gold); color:var(--gold-light); font-size:1rem; cursor:pointer; border-radius:2px; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+  .zoom-btn:hover { background:var(--gold); color:var(--ink); }
+  .zoom-info { color:#e8d9b8; font-size:0.76rem; flex:1; text-align:center; }
+
+  /* zoom-info bar */
+  .zoom-info-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+  .zoom-year-label { font-family:'Cinzel',serif; color:var(--gold-light); font-size:0.78rem; letter-spacing:1px; background:#ffffff10; padding:2px 8px; border-radius:2px; min-width:52px; text-align:center; }
+
+  /* SLIDER */
+  .zoom-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: linear-gradient(to right, var(--gold) 0%, var(--gold) 50%, #ffffff22 50%, #ffffff22 100%);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .zoom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--gold-light);
+    border: 2px solid var(--ink);
+    cursor: grab;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    transition: transform .1s;
+  }
+  .zoom-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.2); }
+  .zoom-slider::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--gold-light);
+    border: 2px solid var(--ink);
+    cursor: grab;
+  }
+  .nav-years { padding:10px 12px; border-bottom:1px solid #ffffff22; }
+  .nav-input-row { display:flex; gap:6px; margin-top:6px; }
+  .nav-input { flex:1; background:#ffffff15; border:1px solid #ffffff33; color:#e8d9b8; padding:5px 8px; font-family:'EB Garamond',serif; font-size:0.8rem; border-radius:2px; }
+  .nav-input:focus { outline:none; border-color:var(--gold); }
+  .nav-go-btn { background:var(--gold); border:none; color:var(--ink); font-family:'Cinzel',serif; font-size:0.6rem; padding:5px 10px; cursor:pointer; border-radius:2px; letter-spacing:1px; }
+
+  /* TIMELINE AREA */
+  .timeline-area { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; }
+  .ruler-wrap { height:var(--ruler-h); background:var(--parchment-dark); border-bottom:2px solid var(--gold); flex-shrink:0; overflow:hidden; user-select:none; }
+  #ruler-canvas { display:block; }
+  .rows-wrap { flex:1; overflow:auto; position:relative; cursor:grab; }
+  .rows-wrap.grabbing { cursor:grabbing; }
+  #timeline-canvas-wrap { position:relative; }
+  .tl-category-header { position:sticky; left:0; z-index:20; display:flex; align-items:center; gap:6px; padding:4px 10px; font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:1.5px; color:#fff; background:var(--ink); border-bottom:1px solid rgba(184,134,11,0.3); width:100%; margin-top:6px; }
+  .tl-category-header:first-child { margin-top:0; }
+  .tl-row { height:var(--row-h); position:relative; border-bottom:1px solid rgba(184,134,11,0.12); }
+  .tl-row:hover { background:rgba(184,134,11,0.04); }
+  .tl-bar { position:absolute; top:6px; height:calc(var(--row-h) - 12px); border-radius:3px; cursor:pointer; display:flex; align-items:center; padding:0 6px; overflow:hidden; transition:filter .15s,transform .1s; white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.25); min-width:4px; }
+  .tl-bar:hover { filter:brightness(1.15); transform:scaleY(1.08); z-index:10; }
+  .tl-bar.uncertain { background-image:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(255,255,255,0.18) 4px,rgba(255,255,255,0.18) 8px) !important; }
+  .tl-bar-label { font-size:0.7rem; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; pointer-events:none; font-family:'EB Garamond',serif; text-shadow:0 1px 2px rgba(0,0,0,0.5); }
+  .tl-point { position:absolute; top:50%; transform:translate(-50%,-50%); width:10px; height:10px; border-radius:50%; cursor:pointer; border:2px solid rgba(255,255,255,0.7); box-shadow:0 0 0 2px rgba(0,0,0,0.2); transition:transform .15s; z-index:5; }
+  .tl-point:hover { transform:translate(-50%,-50%) scale(1.5); }
+  .tl-point.uncertain { border-style:dashed; }
+  .tl-marker { position:absolute; top:0; bottom:0; width:2px; opacity:0.7; pointer-events:none; }
+  .tl-lock { position:absolute; right:3px; top:2px; font-size:0.58rem; opacity:0.7; pointer-events:none; }
+
+  /* POPUP */
+  .popup-overlay { display:none; position:fixed; inset:0; background:rgba(44,24,16,0.5); z-index:200; align-items:center; justify-content:center; }
+  .popup-overlay.open { display:flex; }
+  .popup-box { background:var(--parchment); border:2px solid var(--gold); border-radius:4px; max-width:480px; width:92%; max-height:82vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.4); animation:popIn .2s ease; }
+  @keyframes popIn { from{transform:scale(.9);opacity:0} to{transform:scale(1);opacity:1} }
+  .popup-header { background:var(--ink); padding:12px 16px; display:flex; align-items:center; gap:10px; }
+  .popup-cat-badge { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .popup-title { font-family:'Cinzel',serif; color:var(--gold-light); font-size:0.9rem; flex:1; }
+  .popup-close { background:none; border:none; color:#ffffff66; font-size:1.2rem; cursor:pointer; }
+  .popup-close:hover { color:#fff; }
+  .popup-body { padding:14px 16px; }
+  .popup-type-badge { display:inline-block; font-family:'Cinzel',serif; font-size:0.56rem; letter-spacing:1.5px; padding:2px 8px; border-radius:2px; color:#fff; margin-bottom:8px; }
+  .popup-date-row { display:flex; gap:8px; align-items:center; margin-bottom:4px; font-size:0.8rem; }
+  .popup-date-label { color:var(--ink-light); font-style:italic; min-width:130px; }
+  .popup-date-val { color:var(--ink); font-weight:500; }
+  .cert-badge { display:inline-block; font-size:0.58rem; font-family:'Cinzel',serif; letter-spacing:1px; padding:1px 7px; border-radius:2px; margin-bottom:8px; }
+  .cert-approx { background:#78421218; color:#784212; border:1px solid #78421244; }
+  .cert-uncertain { background:#8b1a1a18; color:#8b1a1a; border:1px solid #8b1a1a44; }
+  .popup-desc { font-size:0.86rem; line-height:1.6; color:var(--ink); margin:10px 0; border-top:1px solid var(--parchment-dark); padding-top:10px; }
+  .popup-private { background:#2c181012; border-left:3px solid var(--gold); padding:8px 10px; margin:8px 0; font-size:0.8rem; font-style:italic; color:var(--ink-light); border-radius:0 3px 3px 0; }
+  .popup-private-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:1px; color:var(--gold); display:block; margin-bottom:3px; }
+  .popup-biblio { font-size:0.74rem; color:var(--ink-light); font-style:italic; border-top:1px solid var(--parchment-dark); padding-top:8px; margin-top:6px; }
+  .popup-biblio span { font-weight:600; font-style:normal; }
+  .popup-goto { background:var(--parchment-dark); border:1px solid var(--gold); color:var(--ink); font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:1px; padding:5px 12px; border-radius:2px; cursor:pointer; margin-top:6px; transition:background .15s; display:block; width:100%; text-align:center; }
+  .popup-goto:hover { background:var(--gold); }
+  .popup-actions { display:flex; gap:8px; margin-top:12px; border-top:1px solid var(--parchment-dark); padding-top:10px; }
+  .btn-edit,.btn-del { flex:1; padding:7px; border:none; border-radius:2px; font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; cursor:pointer; transition:filter .15s; }
+  .btn-edit { background:var(--gold); color:var(--ink); }
+  .btn-edit:hover { filter:brightness(1.1); }
+  .btn-del  { background:var(--red-wax); color:#fff; }
+  .btn-del:hover { filter:brightness(1.2); }
+
+  /* FORM */
+  .form-overlay { display:none; position:fixed; inset:0; background:rgba(44,24,16,0.6); z-index:300; align-items:center; justify-content:center; }
+  .form-overlay.open { display:flex; }
+  .form-box { background:var(--parchment); border:2px solid var(--gold); border-radius:4px; width:92%; max-width:520px; max-height:88vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.5); animation:popIn .2s ease; }
+  .form-header { background:var(--ink); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .form-title { font-family:'Cinzel',serif; color:var(--gold-light); font-size:0.85rem; letter-spacing:2px; }
+  .form-body { padding:14px 16px; display:flex; flex-direction:column; gap:11px; }
+  .form-group { display:flex; flex-direction:column; gap:4px; }
+  .form-label { font-family:'Cinzel',serif; font-size:0.57rem; letter-spacing:1.5px; color:var(--ink-light); text-transform:uppercase; }
+  .form-input,.form-select,.form-textarea { background:#fff; border:1px solid var(--parchment-dark); border-radius:2px; padding:6px 10px; font-family:'EB Garamond',serif; font-size:0.88rem; color:var(--ink); width:100%; }
+  .form-input:focus,.form-select:focus,.form-textarea:focus { outline:none; border-color:var(--gold); }
+  .form-textarea { min-height:65px; resize:vertical; }
+  .date-triple { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; align-items:end; }
+  .date-triple .form-group { margin:0; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .form-hint { font-size:0.7rem; color:var(--ink-light); font-style:italic; }
+  .form-footer { padding:12px 16px; display:flex; gap:8px; border-top:1px solid var(--parchment-dark); background:var(--parchment-dark); }
+  .form-submit { flex:1; background:var(--ink); color:var(--gold-light); border:none; font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:2px; padding:9px; cursor:pointer; border-radius:2px; transition:background .2s; }
+  .form-submit:hover { background:#1a0c08; }
+  .form-cancel { background:transparent; border:1px solid var(--ink-light); color:var(--ink-light); font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:1px; padding:9px 14px; cursor:pointer; border-radius:2px; }
+  .form-cancel:hover { background:var(--parchment-dark); }
+  .person-dates { display:flex; flex-direction:column; gap:10px; }
+  .form-divider { font-family:'Cinzel',serif; font-size:0.56rem; letter-spacing:2px; color:var(--gold); text-transform:uppercase; border-bottom:1px solid var(--gold); padding-bottom:4px; margin-top:2px; }
+  .type-tabs { display:flex; gap:5px; }
+  .type-tab { flex:1; padding:6px; border:2px solid var(--parchment-dark); background:#fff; font-family:'Cinzel',serif; font-size:0.56rem; letter-spacing:1px; color:var(--ink-light); cursor:pointer; border-radius:2px; text-align:center; transition:all .15s; }
+  .type-tab.active { border-color:var(--gold); background:var(--gold); color:var(--ink); }
+  .hidden-section { display:none; }
+  .certainty-row { display:flex; gap:5px; }
+  .cert-btn { flex:1; padding:5px 3px; border-radius:3px; border:1px solid; font-family:'Cinzel',serif; font-size:0.52rem; letter-spacing:1px; cursor:pointer; text-align:center; transition:all .15s; background:transparent; }
+  .cert-btn.sure     { border-color:#196f3d; color:#196f3d; }
+  .cert-btn.approx   { border-color:#784212; color:#784212; }
+  .cert-btn.uncertain{ border-color:#8b1a1a; color:#8b1a1a; }
+  .cert-btn.active.sure     { background:#196f3d; color:#fff; }
+  .cert-btn.active.approx   { background:#784212; color:#fff; }
+  .cert-btn.active.uncertain{ background:#8b1a1a; color:#fff; }
+  .private-note-wrap { background:#2c181010; border:1px dashed var(--gold); border-radius:3px; padding:10px; }
+  .private-note-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .private-note-label { font-family:'Cinzel',serif; font-size:0.57rem; letter-spacing:1.5px; color:var(--gold); flex:1; }
+
+  /* NEW TIMELINE MODAL */
+  .newtl-overlay { display:none; position:fixed; inset:0; background:rgba(44,24,16,0.7); z-index:400; align-items:center; justify-content:center; }
+  .newtl-overlay.open { display:flex; }
+  .newtl-box { background:var(--parchment); border:2px solid var(--gold); border-radius:4px; width:90%; max-width:400px; box-shadow:0 8px 32px rgba(0,0,0,0.5); animation:popIn .2s ease; }
+  .newtl-header { background:var(--ink); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; }
+  .newtl-title { font-family:'Cinzel',serif; color:var(--gold-light); font-size:0.82rem; letter-spacing:2px; }
+  .newtl-body { padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .newtl-footer { padding:12px 16px; display:flex; gap:8px; background:var(--parchment-dark); border-top:1px solid var(--parchment-dark); }
+
+  /* EMPTY STATE */
+  .empty-state { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:var(--ink-light); pointer-events:none; }
+  .empty-state h2 { font-family:'Cinzel',serif; font-size:1rem; color:var(--gold); margin-bottom:6px; }
+  .empty-state p { font-size:0.85rem; }
+
+  .date-block { background:#ffffff08; border-radius:4px; padding:8px 10px; margin-bottom:8px; border:1px solid #ffffff11; }
+  .date-block-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .date-cert-row { display:flex; gap:3px; }
+  .cert-btn-sm { font-size:0.6rem; padding:2px 7px; border:1px solid currentColor; border-radius:2px; cursor:pointer; background:transparent; font-family:'Cinzel',serif; letter-spacing:1px; opacity:0.5; transition:all .15s; }
+  .cert-btn-sm.sure     { color:#196f3d; }
+  .cert-btn-sm.approx   { color:#b8860b; }
+  .cert-btn-sm.uncertain{ color:#922b21; }
+  .cert-btn-sm.active   { opacity:1; background:currentColor; color:#fff !important; }
+
+  /* nascondi certezza globale quando tipo=persona */
+  .persona-mode #global-cert-group { display:none; }
+  /* IMAGE UPLOAD */
+  .img-upload-wrap { display:flex; flex-direction:column; gap:6px; }
+  .img-upload-btn { display:inline-flex; align-items:center; gap:6px; background:var(--parchment-dark); border:1px dashed var(--gold); color:var(--ink); font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; padding:7px 12px; border-radius:3px; cursor:pointer; transition:background .15s; }
+  .img-upload-btn:hover { background:var(--gold); }
+  .img-preview { position:relative; display:inline-block; max-width:100%; }
+  .img-preview img { max-width:100%; max-height:140px; border-radius:3px; border:1px solid var(--gold); object-fit:cover; display:block; }
+  .img-remove-btn { position:absolute; top:4px; right:4px; background:rgba(44,24,16,0.8); border:none; color:#fff; width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:0.7rem; display:flex; align-items:center; justify-content:center; }
+  .popup-image { width:100%; max-height:200px; object-fit:cover; border-radius:3px; margin-bottom:10px; border:1px solid var(--parchment-dark); display:block; }
+
+  /* EXPORT MENU */
+  .export-menu { position:absolute; top:calc(var(--header-h) + 4px); right:80px; background:var(--ink); border:1px solid var(--gold); border-radius:4px; min-width:180px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:none; }
+  .export-menu.open { display:block; }
+  .export-menu-item { padding:10px 14px; font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:1px; color:var(--gold-light); cursor:pointer; border-bottom:1px solid #ffffff11; transition:background .15s; }
+  .export-menu-item:hover { background:#ffffff15; }
+  .export-menu-item:last-child { border-bottom:none; }
+
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:var(--parchment-dark); }
+  ::-webkit-scrollbar-thumb { background:var(--gold); border-radius:3px; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:20px; right:20px; background:var(--ink); color:var(--gold-light); font-family:'Cinzel',serif; font-size:0.7rem; letter-spacing:1px; padding:9px 14px; border-radius:3px; border-left:3px solid var(--gold); z-index:500; opacity:0; transform:translateY(10px); transition:all .3s; pointer-events:none; }
+  .toast.show { opacity:1; transform:translateY(0); }
+
+  /* SIDEBAR PULL TAB */
+  .sidebar-pull-tab {
+    position:absolute; left:0; top:50%; transform:translateY(-50%);
+    z-index:60; background:var(--gold); border:none; color:var(--ink);
+    width:18px; height:48px; cursor:pointer; border-radius:0 4px 4px 0;
+    font-size:0.6rem; display:flex; align-items:center; justify-content:center;
+    box-shadow:2px 0 6px rgba(0,0,0,0.3); transition:left .25s;
+    writing-mode:vertical-rl;
+  }
+  aside:not(.collapsed) ~ .sidebar-pull-tab,
+  .app-body:has(aside:not(.collapsed)) .sidebar-pull-tab { left:var(--sidebar-w); }
+
+  /* APP LOCK OVERLAY */
+  .app-lock {
+    display:none; position:absolute; inset:0; z-index:150;
+    background:rgba(44,24,16,0.82); align-items:center; justify-content:center;
+    flex-direction:column; gap:16px; backdrop-filter:blur(2px);
+  }
+  .app-lock.visible { display:flex; }
+  .app-lock-title { font-family:'Cinzel',serif; color:var(--gold-light); font-size:1rem; letter-spacing:3px; }
+  .app-lock-msg { font-family:'EB Garamond',serif; color:#e8d9b888; font-size:0.9rem; font-style:italic; text-align:center; max-width:280px; line-height:1.6; }
+  .app-lock-btn { background:var(--gold); border:none; color:var(--ink); font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:2px; padding:10px 22px; border-radius:3px; cursor:pointer; }
+
+  /* LOGIN SCREEN */
+  .login-screen {
+    display:none; position:fixed; inset:0; z-index:1000;
+    background:var(--ink);
+    align-items:center; justify-content:center; flex-direction:column; gap:20px;
+  }
+  .login-screen.visible { display:flex; }
+  .login-logo { font-family:'Cinzel',serif; color:var(--gold-light); font-size:2.5rem; letter-spacing:8px; }
+  .login-subtitle { font-family:'EB Garamond',serif; color:#ffffff66; font-size:1rem; font-style:italic; }
+  .login-btn {
+    display:flex; align-items:center; gap:10px;
+    background:#fff; color:#2c1810; border:none;
+    font-family:'Cinzel',serif; font-size:0.75rem; letter-spacing:2px;
+    padding:12px 24px; border-radius:3px; cursor:pointer;
+    transition:transform .15s, box-shadow .15s;
+    box-shadow:0 2px 8px rgba(0,0,0,0.4);
+  }
+  .login-btn:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,0.5); }
+  .login-local-btn {
+    background:transparent; border:1px solid #ffffff33; color:#ffffff66;
+    font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:1px;
+    padding:8px 18px; border-radius:3px; cursor:pointer; transition:all .15s;
+  }
+  .login-local-btn:hover { border-color:var(--gold); color:var(--gold-light); }
+  .login-note { color:#ffffff33; font-size:0.72rem; font-style:italic; max-width:320px; text-align:center; line-height:1.6; }
+
+  /* USER BADGE in header */
+  .user-badge {
+    display:flex; align-items:center; gap:6px;
+    background:#ffffff15; border:1px solid #ffffff22;
+    padding:4px 8px; border-radius:20px; cursor:pointer;
+    transition:background .15s; flex-shrink:0;
+  }
+  .user-badge:hover { background:#ffffff25; }
+  .user-avatar { width:22px; height:22px; border-radius:50%; object-fit:cover; }
+  .user-name { font-family:'Cinzel',serif; font-size:0.58rem; color:var(--gold-light); letter-spacing:1px; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .user-menu {
+    position:absolute; top:calc(var(--header-h) + 4px); right:10px;
+    background:var(--ink); border:1px solid var(--gold); border-radius:4px;
+    min-width:180px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.4);
+    display:none;
+  }
+  .user-menu.open { display:block; }
+  .user-menu-item {
+    padding:10px 14px; font-family:'Cinzel',serif; font-size:0.62rem;
+    letter-spacing:1px; color:var(--gold-light); cursor:pointer;
+    border-bottom:1px solid #ffffff11; transition:background .15s;
+  }
+  .user-menu-item:hover { background:#ffffff15; }
+  .user-menu-item:last-child { border-bottom:none; }
+  .user-menu-item.danger { color:#ff6666; }
+
+  /* SYNC indicator */
+  .sync-dot {
+    width:6px; height:6px; border-radius:50%; background:#196f3d;
+    flex-shrink:0; transition:background .3s;
+  }
+  .sync-dot.syncing { background:var(--gold); animation:pulse .8s infinite; }
+  .sync-dot.error   { background:var(--red-wax); }
+  .sync-dot.offline { background:#ffffff33; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  @media (max-width:700px) {
+    .sidebar-toggle { display:block; }
+    aside { position:absolute; height:calc(100% - var(--header-h)); top:0; z-index:80; }
+    aside:not(.collapsed) { box-shadow:4px 0 20px rgba(0,0,0,0.4); }
+    header h1 { font-size:0.95rem; }
+    .header-btn { font-size:0.56rem; padding:4px 7px; }
+  }
+</style>
+<!-- Firebase SDK -->
+<script type="module">
+  // ═══════════════════════════════════════════════════
+  // CONFIGURAZIONE FIREBASE
+  // Sostituisci questi valori con quelli del tuo progetto
+  // (vedi istruzioni nel file CONFIGURAZIONE_FIREBASE.txt)
+  // ═══════════════════════════════════════════════════
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, deleteDoc, onSnapshot }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const FIREBASE_CONFIG = {
+    apiKey:            "INSERISCI_QUI_LA_TUA_API_KEY",
+    authDomain:        "INSERISCI_QUI_IL_TUO_AUTH_DOMAIN",
+    projectId:         "INSERISCI_QUI_IL_TUO_PROJECT_ID",
+    storageBucket:     "INSERISCI_QUI_LO_STORAGE_BUCKET",
+    messagingSenderId: "INSERISCI_QUI_IL_MESSAGING_SENDER_ID",
+    appId:             "INSERISCI_QUI_L_APP_ID"
+  };
+
+  const CONFIGURED = !FIREBASE_CONFIG.apiKey.includes('INSERISCI');
+
+  let app, auth, db, currentUser = null;
+  let unsubscribeSnapshot = null;
+
+  if (CONFIGURED) {
+    app  = initializeApp(FIREBASE_CONFIG);
+    auth = getAuth(app);
+    db   = getFirestore(app);
+  }
+
+  // ── esponi funzioni al resto dell'app ──
+  window._fb = {
+    configured: CONFIGURED,
+    user: () => currentUser,
+
+    login: async () => {
+      if (!CONFIGURED) return;
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      try { await signInWithPopup(auth, provider); }
+      catch(e) { console.error('Login error', e); window.showToast('Errore login: ' + e.message); }
+    },
+
+    logout: async () => {
+      if (!CONFIGURED) return;
+      if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+      await signOut(auth);
+      currentUser = null;
+      window._onAuthChange(null);
+    },
+
+    // Salva l'intero stato privato dell'utente
+    saveUserData: async (stateObj) => {
+      if (!CONFIGURED || !currentUser) return;
+      try {
+        const ref = doc(db, 'users', currentUser.uid, 'data', 'state');
+        await setDoc(ref, { payload: JSON.stringify(stateObj), updatedAt: Date.now() });
+      } catch(e) { console.error('saveUserData', e); }
+    },
+
+    // Carica lo stato privato dell'utente
+    loadUserData: async () => {
+      if (!CONFIGURED || !currentUser) return null;
+      try {
+        const ref  = doc(db, 'users', currentUser.uid, 'data', 'state');
+        const snap = await getDoc(ref);
+        if (snap.exists()) return JSON.parse(snap.data().payload);
+      } catch(e) { console.error('loadUserData', e); }
+      return null;
+    },
+
+    // Condividi una timeline (la rende pubblica con un id univoco)
+    shareTimeline: async (tlId, tlName, entries, categories) => {
+      if (!CONFIGURED || !currentUser) return null;
+      try {
+        const shareId = tlId + '_' + Date.now();
+        const ref = doc(db, 'shared', shareId);
+        await setDoc(ref, {
+          shareId, tlId, tlName,
+          ownerUid:  currentUser.uid,
+          ownerName: currentUser.displayName,
+          entries:   JSON.stringify(entries),
+          categories:JSON.stringify(categories),
+          createdAt: Date.now(),
+        });
+        return shareId;
+      } catch(e) { console.error('shareTimeline', e); return null; }
+    },
+
+    // Carica una timeline condivisa tramite shareId
+    loadSharedTimeline: async (shareId) => {
+      if (!CONFIGURED) return null;
+      try {
+        const ref  = doc(db, 'shared', shareId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return null;
+        const d = snap.data();
+        return {
+          tlName:     d.tlName,
+          ownerName:  d.ownerName,
+          entries:    JSON.parse(d.entries),
+          categories: JSON.parse(d.categories),
+          createdAt:  d.createdAt,
+        };
+      } catch(e) { console.error('loadSharedTimeline', e); return null; }
+    },
+
+    // Ascolta cambiamenti real-time (opzionale, per collaborazione live)
+    listenUserData: (callback) => {
+      if (!CONFIGURED || !currentUser) return;
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+      const ref = doc(db, 'users', currentUser.uid, 'data', 'state');
+      unsubscribeSnapshot = onSnapshot(ref, snap => {
+        if (snap.exists()) {
+          try { callback(JSON.parse(snap.data().payload)); } catch(e) {}
+        }
+      });
+    },
+  };
+
+  // ── Auth state observer ──
+  if (CONFIGURED) {
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      if (window._onAuthChange) window._onAuthChange(user);
+    });
+  } else {
+    // Firebase non configurato: avvia l'app in modalità locale
+    setTimeout(() => { if (window._onAuthChange) window._onAuthChange(null, true); }, 100);
+  }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2c1810">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(()=>{});
+    });
+  }
+</script>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-logo">✦ CHRONOS</div>
+  <div class="login-subtitle">Timeline Storica Collaborativa</div>
+  <button class="login-btn" onclick="window._fb.login()">
+    <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.4-.1-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15.1 16 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.8 0-14.5 4.6-17.7 11.7z"/><path fill="#FBBC05" d="M24 45c5.8 0 10.8-1.9 14.5-5.2l-6.7-5.5C29.7 35.9 27 37 24 37c-5.9 0-10.7-3.9-11.8-9.2l-7 5.4C7.7 40.5 15.3 45 24 45z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.7-2.5 4.9-4.8 6.3l6.7 5.5C41.9 37.5 45 31.2 45 24c0-1.4-.2-2.7-.5-4z"/></svg>
+    ACCEDI CON GOOGLE
+  </button>
+  <button class="login-local-btn" onclick="startLocalMode()">Usa senza account (dati solo locali)</button>
+  <p class="login-note" id="login-note">Accedi per sincronizzare i tuoi dati tra tutti i dispositivi e condividere timeline con gli amici.</p>
+</div>
+
+<header>
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+  <h1>✦ CHRONOS</h1>
+  <div class="sync-dot" id="sync-dot" title="Stato sincronizzazione"></div>
+  <button class="header-btn accent" onclick="openForm()">+ Voce</button>
+  <button class="header-btn" onclick="shareCurrentTL()" id="btn-share" title="Condividi timeline" style="display:none">⇧ Condividi</button>
+  <button class="header-btn" onclick="toggleExportMenu()">↓ Esporta ▾</button>
+  <button class="header-btn" onclick="importData()">↑ Importa</button>
+  <input type="file" id="import-file" accept=".json,.xlsx,.xls" style="display:none" onchange="handleImport(event)">
+  <div class="user-badge" id="user-badge" style="display:none" onclick="toggleUserMenu()">
+    <img class="user-avatar" id="user-avatar" src="" alt="">
+    <span class="user-name" id="user-name"></span>
+  </div>
+</header>
+<div class="export-menu" id="export-menu">
+  <div class="export-menu-item" onclick="exportData();closeExportMenu()">💾 Esporta JSON</div>
+  <div class="export-menu-item" onclick="exportImage();closeExportMenu()">🖼 Salva come immagine</div>
+  <div class="export-menu-item" onclick="exportPDF();closeExportMenu()">📄 Salva come PDF</div>
+</div>
+
+<!-- User dropdown menu -->
+<div class="user-menu" id="user-menu">
+  <div class="user-menu-item" onclick="openImportShared()">🔗 Importa timeline condivisa</div>
+  <div class="user-menu-item danger" onclick="doLogout()">↩ Esci</div>
+</div>
+
+<div class="tl-selector-bar" id="tl-selector-bar">
+  <button class="tl-current-btn" id="tl-current-btn" onclick="toggleTLDropdown()">
+    <span id="tl-current-name">Generale</span>
+    <span class="arrow">▼</span>
+  </button>
+  <div class="tl-dropdown" id="tl-dropdown"></div>
+</div>
+
+<div class="filters-bar" id="filters-bar">
+  <button class="filter-toggle-btn" id="filter-toggle-btn" onclick="toggleFiltersDropdown()">
+    ☰ Filtri <span class="arrow">▼</span>
+  </button>
+  <span class="filter-active-summary" id="filter-active-summary"></span>
+  <div class="filters-dropdown" id="filters-dropdown">
+    <div class="filter-row">
+      <span class="filter-label">TIPO:</span>
+      <div class="filter-chip active" id="ftype-persona" style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('persona')">👤 Personaggi</div>
+      <div class="filter-chip active" id="ftype-periodo" style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('periodo')">⟷ Periodi</div>
+      <div class="filter-chip active" id="ftype-fatto"   style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('fatto')">◆ Fatti</div>
+    </div>
+    <div class="filter-row" id="filter-cats-row">
+      <span class="filter-label">CAT:</span>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">PERIODO:</span>
+      <div class="filter-period-wrap">
+        <input class="filter-period-input" id="fp-from" type="number" placeholder="dal">
+        <input class="filter-period-input" id="fp-to"   type="number" placeholder="al">
+        <button class="filter-go" onclick="applyPeriodFilter()">OK</button>
+        <button class="filter-go" style="background:var(--ink-light);color:#fff" onclick="clearPeriodFilter()">✕</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app-body">
+  <button class="sidebar-pull-tab" id="sidebar-pull-tab" onclick="toggleSidebar()" title="Apri/Chiudi pannello">◈</button>
+  <aside id="sidebar" class="collapsed">
+    <div class="zoom-controls">
+      <div class="zoom-label">◈ Navigazione</div>
+
+      <!-- periodo visualizzato -->
+      <div class="zoom-info-bar">
+        <span id="zoom-info-from" class="zoom-year-label">1000</span>
+        <span style="color:#ffffff44;font-size:0.65rem">–</span>
+        <span id="zoom-info-to" class="zoom-year-label">1900</span>
+      </div>
+
+      <!-- SLIDER ZOOM -->
+      <div style="margin:6px 0 2px">
+        <div class="zoom-label" style="margin-bottom:4px">Ampiezza vista</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="color:var(--gold-light);font-size:0.7rem">+</span>
+          <input type="range" id="zoom-slider" min="1" max="100" value="50"
+            class="zoom-slider" oninput="onZoomSlider(this.value)" style="flex:1">
+          <span style="color:var(--gold-light);font-size:0.7rem">−</span>
+        </div>
+      </div>
+
+      <!-- SLIDER POSIZIONE -->
+      <div style="margin:4px 0 2px">
+        <div class="zoom-label" style="margin-bottom:4px">Posizione</div>
+        <input type="range" id="pan-slider" min="0" max="100" value="50"
+          class="zoom-slider" oninput="onPanSlider(this.value)" style="width:100%">
+      </div>
+
+      <!-- pulsanti rapidi -->
+      <div class="zoom-row" style="margin-top:8px">
+        <button class="zoom-btn" onclick="panLeft()" title="Indietro">◂</button>
+        <button class="zoom-btn" onclick="zoomIn()"  title="Zoom in">＋</button>
+        <button class="zoom-btn" style="flex:1;width:auto;font-size:0.5rem;letter-spacing:1px" onclick="resetView()">TUTTO</button>
+        <button class="zoom-btn" onclick="zoomOut()" title="Zoom out">－</button>
+        <button class="zoom-btn" onclick="panRight()" title="Avanti">▸</button>
+      </div>
+    </div>
+
+    <!-- PERIODO PRECISO -->
+    <div class="nav-years">
+      <div class="sidebar-title">◈ Vai all'anno</div>
+      <div class="nav-input-row">
+        <input class="nav-input" type="number" id="goto-year" placeholder="es. 1215">
+        <button class="nav-go-btn" onclick="goToYear()">VAI</button>
+      </div>
+      <div class="sidebar-title" style="margin-top:10px">◈ Mostra periodo preciso</div>
+      <div class="nav-input-row" style="margin-top:4px">
+        <input class="nav-input" type="number" id="range-from" placeholder="dal">
+        <input class="nav-input" type="number" id="range-to"   placeholder="al">
+        <button class="nav-go-btn" onclick="goToRange()">VAI</button>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">◈ Categorie</div>
+      <div id="categories-list"></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">◈ Nuova categoria</div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <input class="nav-input" id="new-cat-name" placeholder="Nome" style="flex:1">
+        <input type="color" id="new-cat-color" value="#4a6fa5" style="width:28px;height:28px;border:none;border-radius:2px;cursor:pointer;background:none;padding:0">
+      </div>
+      <button class="nav-go-btn" style="width:100%;margin-top:6px;padding:7px" onclick="addCategory()">AGGIUNGI</button>
+    </div>
+    <div style="padding:10px 12px;color:#ffffff33;font-size:0.65rem;font-style:italic;line-height:1.5">
+      Trascina la timeline per navigare. Rotella del mouse = zoom.
+    </div>
+  </aside>
+
+  <div class="timeline-area">
+    <!-- BLOCCO APP: appare se non ci sono categorie o voci -->
+    <div class="app-lock" id="app-lock">
+      <div class="app-lock-title">✦ CHRONOS</div>
+      <div class="app-lock-msg">Per iniziare aggiungi una categoria dal pannello a sinistra, oppure importa un file Excel o JSON.</div>
+      <button class="app-lock-btn" onclick="openSidebarAndFocus()">◈ Apri pannello</button>
+    </div>
+    <div class="ruler-wrap"><canvas id="ruler-canvas"></canvas></div>
+    <div class="rows-wrap" id="rows-wrap">
+      <div id="timeline-canvas-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL POPUP -->
+<div class="popup-overlay" id="popup-overlay" onclick="closePopup(event)">
+  <div class="popup-box">
+    <div class="popup-header">
+      <div class="popup-cat-badge" id="popup-cat-badge"></div>
+      <div class="popup-title" id="popup-title"></div>
+      <button class="popup-close" onclick="closePopupDirect()">✕</button>
+    </div>
+    <div class="popup-body">
+      <div id="popup-type-badge" class="popup-type-badge"></div>
+      <div id="popup-cert"></div>
+      <div id="popup-dates"></div>
+      <div id="popup-desc" class="popup-desc"></div>
+      <div id="popup-private" class="popup-private" style="display:none">
+        <span class="popup-private-label">🔒 NOTA PRIVATA</span>
+        <span id="popup-private-text"></span>
+      </div>
+      <div id="popup-biblio" class="popup-biblio" style="display:none"></div>
+      <div id="popup-goto-wrap"></div>
+      <div class="popup-actions">
+        <button class="btn-edit" onclick="editCurrentEntry()">✎ Modifica</button>
+        <button class="btn-del"  onclick="deleteCurrentEntry()">✕ Elimina</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT FORM -->
+<div class="form-overlay" id="form-overlay" onclick="closeFormOverlay(event)">
+  <div class="form-box" onclick="event.stopPropagation()">
+    <div class="form-header">
+      <div class="form-title" id="form-title-text">NUOVA VOCE</div>
+      <button class="popup-close" onclick="closeForm()">✕</button>
+    </div>
+    <div class="form-body">
+      <div class="form-group">
+        <label class="form-label">Tipo di voce</label>
+        <div class="type-tabs">
+          <button class="type-tab active" id="tab-persona" onclick="setType('persona')">👤 Personaggio</button>
+          <button class="type-tab" id="tab-periodo" onclick="setType('periodo')">⟷ Periodo</button>
+          <button class="type-tab" id="tab-fatto"   onclick="setType('fatto')">◆ Fatto</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nome / Titolo *</label>
+        <input class="form-input" id="f-name" placeholder="es. Papa Gregorio VII">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Categoria *</label>
+          <select class="form-select" id="f-category"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Timeline *</label>
+          <select class="form-select" id="f-timeline"></select>
+        </div>
+      </div>
+      <!-- certezza globale rimane solo per periodi/fatti -->
+      <div class="form-group" id="global-cert-group">
+        <label class="form-label">Certezza delle date</label>
+        <div class="certainty-row">
+          <button class="cert-btn sure active"  id="cert-sure"      onclick="setCert('sure')">✓ Certa</button>
+          <button class="cert-btn approx"        id="cert-approx"    onclick="setCert('approx')">~ Approssimativa</button>
+          <button class="cert-btn uncertain"     id="cert-uncertain" onclick="setCert('uncertain')">? Incerta</button>
+        </div>
+        <p class="form-hint">Le date incerte/approssimative appaiono tratteggiate sulla timeline.</p>
+      </div>
+
+      <!-- PERSONA -->
+      <div id="section-persona">
+        <div class="form-divider">Date del personaggio</div>
+        <div class="person-dates" style="margin-top:10px">
+
+          <div class="date-block">
+            <div class="date-block-header">
+              <label class="form-label" style="margin:0">Nascita</label>
+              <div class="date-cert-row">
+                <button class="cert-btn-sm sure active"     id="cert-birth-sure"      onclick="setDateCert('birth','sure')">✓</button>
+                <button class="cert-btn-sm approx"           id="cert-birth-approx"    onclick="setDateCert('birth','approx')">~</button>
+                <button class="cert-btn-sm uncertain"        id="cert-birth-uncertain" onclick="setDateCert('birth','uncertain')">?</button>
+              </div>
+            </div>
+            <div class="date-triple">
+              <div class="form-group"><label class="form-label">Anno</label><input class="form-input" id="p-birth-y" type="number" placeholder="1020"></div>
+              <div class="form-group"><label class="form-label">Mese</label><select class="form-select" id="p-birth-m"></select></div>
+              <div class="form-group"><label class="form-label">Giorno</label><input class="form-input" id="p-birth-d" type="number" min="1" max="31"></div>
+            </div>
+          </div>
+
+          <div class="date-block">
+            <div class="date-block-header">
+              <label class="form-label" style="margin:0">Salita al potere / Elezione</label>
+              <div class="date-cert-row">
+                <button class="cert-btn-sm sure active"     id="cert-power-sure"      onclick="setDateCert('power','sure')">✓</button>
+                <button class="cert-btn-sm approx"           id="cert-power-approx"    onclick="setDateCert('power','approx')">~</button>
+                <button class="cert-btn-sm uncertain"        id="cert-power-uncertain" onclick="setDateCert('power','uncertain')">?</button>
+              </div>
+            </div>
+            <div class="date-triple">
+              <div class="form-group"><label class="form-label">Anno</label><input class="form-input" id="p-power-y" type="number" placeholder="1073"></div>
+              <div class="form-group"><label class="form-label">Mese</label><select class="form-select" id="p-power-m"></select></div>
+              <div class="form-group"><label class="form-label">Giorno</label><input class="form-input" id="p-power-d" type="number" min="1" max="31"></div>
+            </div>
+          </div>
+
+          <div class="date-block">
+            <label class="form-label">Rinuncia / Abdicazione</label>
+            <div class="date-triple">
+              <div class="form-group"><label class="form-label">Anno</label><input class="form-input" id="p-resign-y" type="number"></div>
+              <div class="form-group"><label class="form-label">Mese</label><select class="form-select" id="p-resign-m"></select></div>
+              <div class="form-group"><label class="form-label">Giorno</label><input class="form-input" id="p-resign-d" type="number" min="1" max="31"></div>
+            </div>
+          </div>
+
+          <div class="date-block">
+            <div class="date-block-header">
+              <label class="form-label" style="margin:0">Morte</label>
+              <div class="date-cert-row">
+                <button class="cert-btn-sm sure active"     id="cert-death-sure"      onclick="setDateCert('death','sure')">✓</button>
+                <button class="cert-btn-sm approx"           id="cert-death-approx"    onclick="setDateCert('death','approx')">~</button>
+                <button class="cert-btn-sm uncertain"        id="cert-death-uncertain" onclick="setDateCert('death','uncertain')">?</button>
+              </div>
+            </div>
+            <div class="date-triple">
+              <div class="form-group"><label class="form-label">Anno</label><input class="form-input" id="p-death-y" type="number" placeholder="1085"></div>
+              <div class="form-group"><label class="form-label">Mese</label><select class="form-select" id="p-death-m"></select></div>
+              <div class="form-group"><label class="form-label">Giorno</label><input class="form-input" id="p-death-d" type="number" min="1" max="31"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PERIODO -->
+      <div id="section-periodo" class="hidden-section">
+        <div class="form-divider">Durata del periodo</div>
+        <div class="form-row" style="margin-top:10px">
+          <div class="form-group"><label class="form-label">Anno inizio *</label><input class="form-input" id="per-start-y" type="number" placeholder="1095"></div>
+          <div class="form-group"><label class="form-label">Anno fine *</label><input class="form-input" id="per-end-y" type="number" placeholder="1291"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Mese inizio</label><select class="form-select" id="per-start-m"></select></div>
+          <div class="form-group"><label class="form-label">Mese fine</label><select class="form-select" id="per-end-m"></select></div>
+        </div>
+      </div>
+
+      <!-- FATTO -->
+      <div id="section-fatto" class="hidden-section">
+        <div class="form-divider">Data dell'evento</div>
+        <div class="date-block" style="margin-top:10px">
+          <div class="date-block-header">
+            <label class="form-label" style="margin:0">Data</label>
+            <div class="date-cert-row">
+              <button class="cert-btn-sm sure active"  id="cert-ev-sure"      onclick="setDateCert('ev','sure')">✓</button>
+              <button class="cert-btn-sm approx"        id="cert-ev-approx"    onclick="setDateCert('ev','approx')">~</button>
+              <button class="cert-btn-sm uncertain"     id="cert-ev-uncertain" onclick="setDateCert('ev','uncertain')">?</button>
+            </div>
+          </div>
+          <div class="date-triple">
+            <div class="form-group"><label class="form-label">Anno *</label><input class="form-input" id="ev-y" type="number" placeholder="1215"></div>
+            <div class="form-group"><label class="form-label">Mese</label><select class="form-select" id="ev-m"></select></div>
+            <div class="form-group"><label class="form-label">Giorno</label><input class="form-input" id="ev-d" type="number" min="1" max="31"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Descrizione pubblica</label>
+        <textarea class="form-textarea" id="f-desc" placeholder="Breve descrizione visibile a tutti..."></textarea>
+      </div>
+
+      <div class="private-note-wrap">
+        <div class="private-note-header">
+          <span>🔒</span>
+          <span class="private-note-label">NOTA PRIVATA (solo per te)</span>
+        </div>
+        <textarea class="form-textarea" id="f-private" placeholder="Appunti personali, ipotesi di studio, dubbi sulle fonti..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Timeline di approfondimento collegata</label>
+        <select class="form-select" id="f-linked-tl">
+          <option value="">— Nessuna —</option>
+        </select>
+        <p class="form-hint">Il pulsante "Vai alla timeline" apparirà nel riquadro dettaglio.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Immagine</label>
+        <div class="img-upload-wrap" id="img-upload-wrap">
+          <div class="img-preview" id="img-preview" style="display:none">
+            <img id="img-preview-src" src="" alt="">
+            <button class="img-remove-btn" onclick="removeImage()" title="Rimuovi immagine">✕</button>
+          </div>
+          <label class="img-upload-btn" id="img-upload-label">
+            📎 Scegli immagine
+            <input type="file" id="f-image-file" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+          </label>
+          <p class="form-hint">JPG, PNG, WebP — max 2MB. L'immagine viene salvata nell'app.</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Riferimento bibliografico</label>
+        <input class="form-input" id="f-biblio" placeholder="es. Norwich, J.J., Bisanzio, p. 234">
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="form-cancel" onclick="closeForm()">Annulla</button>
+      <button class="form-submit" onclick="saveEntry()">✦ SALVA</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW TIMELINE MODAL -->
+<div class="newtl-overlay" id="newtl-overlay" onclick="closeNewTL(event)">
+  <div class="newtl-box" onclick="event.stopPropagation()">
+    <div class="newtl-header">
+      <span class="newtl-title">NUOVA TIMELINE</span>
+      <button class="popup-close" onclick="closeNewTLDirect()">✕</button>
+    </div>
+    <div class="newtl-body">
+      <div class="form-group"><label class="form-label">Nome *</label><input class="form-input" id="newtl-name" placeholder="es. Papi del XII secolo"></div>
+      <div class="form-group"><label class="form-label">Descrizione</label><input class="form-input" id="newtl-desc" placeholder="(opzionale)"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Anno inizio</label><input class="form-input" id="newtl-from" type="number" placeholder="1000"></div>
+        <div class="form-group"><label class="form-label">Anno fine</label><input class="form-input" id="newtl-to" type="number" placeholder="1300"></div>
+      </div>
+    </div>
+    <div class="newtl-footer">
+      <button class="form-cancel" onclick="closeNewTLDirect()">Annulla</button>
+      <button class="form-submit" onclick="saveNewTL()">✦ CREA</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT CATEGORY MODAL -->
+<div class="newtl-overlay" id="editcat-overlay" onclick="closeEditCat(event)">
+  <div class="newtl-box" onclick="event.stopPropagation()">
+    <div class="newtl-header">
+      <span class="newtl-title">MODIFICA CATEGORIA</span>
+      <button class="popup-close" onclick="closeEditCat()">✕</button>
+    </div>
+    <div class="newtl-body">
+      <input type="hidden" id="editcat-id">
+      <div class="form-group">
+        <label class="form-label">Nome categoria *</label>
+        <input class="form-input" id="editcat-name" placeholder="Nome">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Colore</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="color" id="editcat-color" style="width:40px;height:32px;border:1px solid var(--parchment-dark);border-radius:3px;cursor:pointer;padding:2px">
+          <span style="font-size:0.82rem;color:var(--ink-light);font-style:italic">Il colore si aggiornerà su tutte le voci collegate</span>
+        </div>
+      </div>
+    </div>
+    <div class="newtl-footer">
+      <button class="form-cancel" onclick="closeEditCat()">Annulla</button>
+      <button class="form-submit" onclick="saveEditCat()">✦ SALVA</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOVE + DELETE CATEGORY MODAL -->
+<div class="newtl-overlay" id="movecat-overlay" onclick="closeMovecat(event)">
+  <div class="newtl-box" onclick="event.stopPropagation()">
+    <div class="newtl-header">
+      <span class="newtl-title">ELIMINA CATEGORIA</span>
+      <button class="popup-close" onclick="closeMovecat()">✕</button>
+    </div>
+    <div class="newtl-body">
+      <input type="hidden" id="movecat-from-id">
+      <p style="font-size:0.85rem;color:var(--ink);line-height:1.6">
+        La categoria <strong id="movecat-from-name"></strong> contiene
+        <strong id="movecat-count"></strong> voci.<br>
+        Prima di eliminarla, scegli dove spostare queste voci:
+      </p>
+      <div class="form-group" style="margin-top:4px">
+        <label class="form-label">Sposta le voci in</label>
+        <select class="form-select" id="movecat-to"></select>
+      </div>
+      <p style="font-size:0.75rem;color:var(--ink-light);font-style:italic">
+        Dopo lo spostamento la categoria verrà eliminata definitivamente.
+      </p>
+    </div>
+    <div class="newtl-footer">
+      <button class="form-cancel" onclick="closeMovecat()">Annulla</button>
+      <button class="form-submit" style="background:var(--red-wax)" onclick="confirmMovecat()">✕ ELIMINA E SPOSTA</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXCEL IMPORT MODAL -->
+<div class="newtl-overlay" id="import-excel-overlay" onclick="closeExcelModal(event)">
+  <div class="newtl-box" onclick="event.stopPropagation()" style="max-width:460px">
+    <div class="newtl-header">
+      <span class="newtl-title">IMPORTA DA EXCEL</span>
+      <button class="popup-close" onclick="closeExcelModal()">✕</button>
+    </div>
+    <div class="newtl-body">
+      <p style="font-size:0.88rem;color:var(--ink);line-height:1.7">
+        Trovate <strong id="xl-import-count">0</strong> voci nel file Excel.<br>Come vuoi procedere?
+      </p>
+      <p id="xl-import-warnings" style="font-size:0.78rem;color:#922b21;font-style:italic;display:none;margin-top:4px"></p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+        <button onclick="doExcelMerge()" style="background:var(--ink);color:var(--gold-light);border:none;font-family:'Cinzel',serif;font-size:0.63rem;letter-spacing:1.5px;padding:12px;border-radius:3px;cursor:pointer;text-align:left;border-left:4px solid var(--gold)">
+          ✦ AGGIUNGI — Unisci alle voci esistenti nella timeline corrente<br>
+          <span style="font-size:0.7rem;opacity:0.6;font-family:'EB Garamond',serif;font-style:italic">Le voci già presenti non vengono modificate</span>
+        </button>
+        <button onclick="doExcelOverwrite()" style="background:#ffffff10;color:#e8d9b8;border:1px solid #ffffff33;font-family:'Cinzel',serif;font-size:0.63rem;letter-spacing:1.5px;padding:12px;border-radius:3px;cursor:pointer;text-align:left;border-left:4px solid var(--red-wax)">
+          ✕ SOSTITUISCI — Cancella le voci della timeline corrente e usa solo quelle del file<br>
+          <span style="font-size:0.7rem;opacity:0.6;font-family:'EB Garamond',serif;font-style:italic">Le altre timeline non vengono toccate</span>
+        </button>
+      </div>
+    </div>
+    <div class="newtl-footer">
+      <button class="form-cancel" onclick="closeExcelModal()">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT CHOICE MODAL -->
+<div class="newtl-overlay" id="import-modal-overlay" onclick="closeImportModal(event)">
+  <div class="newtl-box" onclick="event.stopPropagation()">
+    <div class="newtl-header">
+      <span class="newtl-title">IMPORTA TIMELINE</span>
+      <button class="popup-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="newtl-body">
+      <p style="font-size:0.88rem;color:var(--ink);line-height:1.7">
+        Come vuoi importare il file?
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+        <button onclick="doImportMerge()" style="background:var(--ink);color:var(--gold-light);border:none;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:1.5px;padding:12px;border-radius:3px;cursor:pointer;text-align:left;border-left:4px solid var(--gold)">
+          ✦ UNISCI — Aggiungi le nuove voci alle tue esistenti<br>
+          <span style="font-size:0.7rem;opacity:0.6;font-family:'EB Garamond',serif;font-style:italic">Le voci già presenti non vengono modificate</span>
+        </button>
+        <button onclick="doImportOverwrite()" style="background:#ffffff10;color:#e8d9b8;border:1px solid #ffffff33;font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:1.5px;padding:12px;border-radius:3px;cursor:pointer;text-align:left;border-left:4px solid var(--red-wax)">
+          ✕ SOSTITUISCI — Cancella tutto e usa solo il file importato<br>
+          <span style="font-size:0.7rem;opacity:0.6;font-family:'EB Garamond',serif;font-style:italic">Attenzione: i tuoi dati attuali andranno persi</span>
+        </button>
+      </div>
+    </div>
+    <div class="newtl-footer">
+      <button class="form-cancel" onclick="closeImportModal()">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE LINK MODAL -->
+<div class="newtl-overlay" id="share-link-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="newtl-box" onclick="event.stopPropagation()" style="max-width:460px">
+    <div class="newtl-header">
+      <span class="newtl-title">CONDIVIDI TIMELINE</span>
+      <button class="popup-close" onclick="document.getElementById('share-link-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="newtl-body">
+      <p style="font-size:0.88rem;color:var(--ink);line-height:1.7">
+        La timeline <strong id="share-link-name"></strong> è ora pubblica.<br>
+        Manda questo link ai tuoi collaboratori:
+      </p>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <input class="form-input" id="share-link-url" readonly style="font-size:0.72rem;background:#fff">
+        <button class="nav-go-btn" onclick="copyShareLink()" style="white-space:nowrap">📋 Copia</button>
+      </div>
+      <p style="font-size:0.75rem;color:var(--ink-light);font-style:italic;margin-top:8px">
+        Chi riceve il link potrà importare la timeline in sola lettura nella propria app. Le note private non vengono condivise.
+      </p>
+    </div>
+    <div class="newtl-footer">
+      <button class="form-submit" onclick="document.getElementById('share-link-overlay').classList.remove('open')">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT SHARED MODAL -->
+<div class="newtl-overlay" id="import-shared-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="newtl-box" onclick="event.stopPropagation()">
+    <div class="newtl-header">
+      <span class="newtl-title">IMPORTA TIMELINE CONDIVISA</span>
+      <button class="popup-close" onclick="document.getElementById('import-shared-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="newtl-body">
+      <div class="form-group">
+        <label class="form-label">Link o codice condivisione</label>
+        <input class="form-input" id="import-shared-id" placeholder="Incolla il link ricevuto dall'amico...">
+      </div>
+    </div>
+    <div class="newtl-footer">
+      <button class="form-cancel" onclick="document.getElementById('import-shared-overlay').classList.remove('open')">Annulla</button>
+      <button class="form-submit" onclick="doImportShared()">✦ IMPORTA</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MONTHS = ['—','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const CERT_LABELS = { sure:'✓ Certa', approx:'~ Approssimativa', uncertain:'? Incerta' };
+
+let state = {
+  currentTL: 'generale',
+  timelines: [{ id:'generale', name:'Generale', desc:'', viewStart:1000, viewEnd:1900 }],
+  hiddenCats: {},
+  activeTypeFilters: { persona:true, periodo:true, fatto:true },
+  periodFilter: null,
+  entries: [],
+  categories: [
+    { id:'papi',      name:'Papi / Chiesa',       color:'#7b2d8b' },
+    { id:'re',        name:'Re e regni',           color:'#1a5276' },
+    { id:'nobili',    name:'Nobili e famiglie',    color:'#196f3d' },
+    { id:'battaglie', name:'Battaglie ed eventi',  color:'#922b21' },
+    { id:'concili',   name:'Concili e documenti',  color:'#784212' },
+  ]
+};
+
+let editingId=null, currentType='persona', currentCert='sure', popupEntryId=null;
+
+const curTL = () => state.timelines.find(t=>t.id===state.currentTL)||state.timelines[0];
+const getHiddenSet = (tlId) => new Set(Array.isArray(state.hiddenCats[tlId]) ? state.hiddenCats[tlId] : []);
+const setHiddenSet = (tlId, set) => { state.hiddenCats[tlId] = [...set]; };
+
+// ── AUTH & FIREBASE BRIDGE ──
+let _fbMode = 'local'; // 'local' | 'firebase'
+let _saveTimer = null;
+
+window._onAuthChange = async (user, forceLocal = false) => {
+  if (forceLocal || !user) {
+    _fbMode = 'local';
+    setSyncDot('offline');
+    document.getElementById('login-screen').classList.remove('visible');
+    document.getElementById('user-badge').style.display = 'none';
+    document.getElementById('btn-share').style.display = 'none';
+    // controlla link condiviso nell'URL anche in modalità locale
+    checkSharedLink();
+    return;
+  }
+  // Logged in
+  _fbMode = 'firebase';
+  document.getElementById('login-screen').classList.remove('visible');
+  document.getElementById('user-badge').style.display = '';
+  document.getElementById('btn-share').style.display = '';
+  document.getElementById('user-avatar').src = user.photoURL || '';
+  document.getElementById('user-name').textContent = user.displayName?.split(' ')[0] || 'Utente';
+  setSyncDot('syncing');
+  // Carica dati da Firebase
+  const d = await window._fb.loadUserData();
+  if (d) {
+    ['timelines','currentTL','entries','categories','activeTypeFilters','periodFilter','hiddenCats'].forEach(k => {
+      if (d[k] !== undefined) state[k] = d[k];
+    });
+  } else {
+    loadDemo(); // primo accesso: carica dati demo
+    await window._fb.saveUserData(state);
+  }
+  setSyncDot('ok');
+  renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
+  checkSharedLink();
+};
+
+function startLocalMode() {
+  document.getElementById('login-screen').classList.remove('visible');
+  _fbMode = 'local';
+  setSyncDot('offline');
+  load(); loadDemo();
+  renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
+}
+
+function setSyncDot(status) {
+  const d = document.getElementById('sync-dot');
+  d.className = 'sync-dot' + (status === 'syncing' ? ' syncing' : status === 'error' ? ' error' : status === 'offline' ? ' offline' : '');
+  d.title = status === 'ok' ? 'Sincronizzato' : status === 'syncing' ? 'Salvataggio...' : status === 'error' ? 'Errore sincronizzazione' : 'Modalità locale';
+}
+
+function doLogout() {
+  closeUserMenu();
+  window._fb.logout();
+  document.getElementById('login-screen').classList.add('visible');
+  setSyncDot('offline');
+  document.getElementById('user-badge').style.display = 'none';
+  document.getElementById('btn-share').style.display = 'none';
+}
+
+function toggleUserMenu() {
+  document.getElementById('user-menu').classList.toggle('open');
+}
+function closeUserMenu() {
+  document.getElementById('user-menu').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#user-badge') && !e.target.closest('#user-menu')) closeUserMenu();
+});
+
+// ── STORAGE ──
+function save() {
+  // Sempre salva in localStorage come backup
+  try { localStorage.setItem('chronos_v2', JSON.stringify(state)); } catch(e) {}
+  // Se Firebase attivo, salva in cloud con debounce 1.5s
+  if (_fbMode === 'firebase' && window._fb?.configured) {
+    setSyncDot('syncing');
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(async () => {
+      await window._fb.saveUserData(state);
+      setSyncDot('ok');
+    }, 1500);
+  }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem('chronos_v2');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    ['timelines','currentTL','entries','categories','activeTypeFilters','periodFilter','hiddenCats'].forEach(k => {
+      if (d[k] !== undefined) state[k] = d[k];
+    });
+  } catch(e) { console.warn('load error',e); }
+}
+
+// ── CONDIVISIONE TIMELINE ──
+async function shareCurrentTL() {
+  if (_fbMode !== 'firebase') { showToast('Accedi con Google per condividere'); return; }
+  const tl = curTL();
+  const tlEntries = state.entries.filter(e => e.timeline === tl.id);
+  showToast('Creazione link condivisione...');
+  const shareId = await window._fb.shareTimeline(tl.id, tl.name, tlEntries, state.categories);
+  if (!shareId) { showToast('Errore nella condivisione'); return; }
+  const url = location.origin + location.pathname + '?shared=' + shareId;
+  // mostra il link
+  document.getElementById('share-link-url').value = url;
+  document.getElementById('share-link-name').textContent = tl.name;
+  document.getElementById('share-link-overlay').classList.add('open');
+}
+function copyShareLink() {
+  const url = document.getElementById('share-link-url').value;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copiato!'));
+}
+
+function openImportShared() {
+  closeUserMenu();
+  document.getElementById('import-shared-overlay').classList.add('open');
+  document.getElementById('import-shared-id').value = '';
+}
+async function doImportShared() {
+  let val = document.getElementById('import-shared-id').value.trim();
+  // estrai shareId dall'URL se incollato intero
+  if (val.includes('?shared=')) val = val.split('?shared=')[1];
+  if (!val) { showToast('Inserisci il link o il codice'); return; }
+  showToast('Caricamento...');
+  const data = await window._fb.loadSharedTimeline(val);
+  if (!data) { showToast('Timeline non trovata. Controlla il link.'); return; }
+  document.getElementById('import-shared-overlay').classList.remove('open');
+  // Merge categorie
+  if (data.categories) data.categories.forEach(dc => {
+    if (!state.categories.find(c => c.id === dc.id)) state.categories.push(dc);
+  });
+  // Aggiungi timeline con nuovo id locale
+  const newTlId = 'shared_' + Date.now();
+  state.timelines.push({ id: newTlId, name: `${data.tlName} (di ${data.ownerName})`, desc: 'Timeline condivisa', viewStart:1000, viewEnd:1900 });
+  // Aggiungi voci rimappate alla nuova timeline
+  data.entries.forEach(e => {
+    if (!state.entries.find(x => x.id === e.id)) {
+      state.entries.push({ ...e, timeline: newTlId, privateNote:'' });
+    }
+  });
+  save(); renderTLTabs(); renderCategories(); switchTL(newTlId); updateFilterChips();
+  showToast(`Timeline "${data.tlName}" importata!`);
+}
+
+// controlla se nell'URL c'è ?shared=... al caricamento
+async function checkSharedLink() {
+  const params = new URLSearchParams(location.search);
+  const shareId = params.get('shared');
+  if (!shareId) return;
+  // rimuovi il parametro dall'URL senza ricaricare
+  history.replaceState({}, '', location.pathname);
+  if (!window._fb?.configured) { showToast('Configura Firebase per importare timeline condivise'); return; }
+  showToast('Caricamento timeline condivisa...');
+  const data = await window._fb.loadSharedTimeline(shareId);
+  if (!data) { showToast('Timeline non trovata'); return; }
+  if (data.categories) data.categories.forEach(dc => {
+    if (!state.categories.find(c => c.id === dc.id)) state.categories.push(dc);
+  });
+  const newTlId = 'shared_' + Date.now();
+  state.timelines.push({ id: newTlId, name: `${data.tlName} (di ${data.ownerName})`, desc:'', viewStart:1000, viewEnd:1900 });
+  data.entries.forEach(e => {
+    if (!state.entries.find(x => x.id === e.id))
+      state.entries.push({ ...e, timeline: newTlId, privateNote:'' });
+  });
+  save(); renderTLTabs(); renderCategories(); switchTL(newTlId); updateFilterChips();
+  showToast(`Timeline "${data.tlName}" aggiunta!`);
+}
+
+// ── MONTH SELECTS ──
+function populateMonthSelects() {
+  ['p-birth-m','p-power-m','p-resign-m','p-death-m','per-start-m','per-end-m','ev-m'].forEach(id => {
+    const sel = document.getElementById(id); if (!sel) return;
+    sel.innerHTML = MONTHS.map((m,i)=>`<option value="${i===0?'':i}">${m}</option>`).join('');
+  });
+}
+
+// ── TIMELINE DROPDOWN ──
+function toggleTLDropdown() {
+  const btn = document.getElementById('tl-current-btn');
+  const dd  = document.getElementById('tl-dropdown');
+  const isOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) { btn.classList.add('open'); dd.classList.add('open'); }
+}
+function toggleFiltersDropdown() {
+  const btn = document.getElementById('filter-toggle-btn');
+  const dd  = document.getElementById('filters-dropdown');
+  const isOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) { btn.classList.add('open'); dd.classList.add('open'); }
+}
+function closeAllDropdowns() {
+  document.getElementById('tl-current-btn')?.classList.remove('open');
+  document.getElementById('tl-dropdown')?.classList.remove('open');
+  document.getElementById('filter-toggle-btn')?.classList.remove('open');
+  document.getElementById('filters-dropdown')?.classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tl-selector-bar') && !e.target.closest('.filters-bar'))
+    closeAllDropdowns();
+});
+
+function renderTLTabs() {
+  const dd = document.getElementById('tl-dropdown');
+  dd.innerHTML = '';
+  state.timelines.forEach(tl => {
+    const item = document.createElement('div');
+    item.className = 'tl-dropdown-item' + (tl.id === state.currentTL ? ' active' : '');
+    item.innerHTML = `<span>${tl.name}</span>`;
+    if (tl.id !== 'generale') {
+      const del = document.createElement('span');
+      del.className = 'tl-item-del'; del.textContent = '✕';
+      del.onclick = e => { e.stopPropagation(); deleteTL(tl.id); };
+      item.appendChild(del);
+    }
+    item.addEventListener('click', () => { switchTL(tl.id); closeAllDropdowns(); });
+    dd.appendChild(item);
+  });
+  // Pulsante nuova timeline
+  const addItem = document.createElement('div');
+  addItem.className = 'tl-dropdown-add';
+  addItem.innerHTML = '＋ Nuova timeline';
+  addItem.onclick = () => { closeAllDropdowns(); openNewTL(); };
+  dd.appendChild(addItem);
+  // Aggiorna nome timeline corrente
+  const cur = curTL();
+  const nameEl = document.getElementById('tl-current-name');
+  if (nameEl) nameEl.textContent = cur?.name || 'Generale';
+}
+function switchTL(id) {
+  state.currentTL=id; save();
+  renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
+}
+function openNewTL() {
+  ['newtl-name','newtl-desc','newtl-from','newtl-to'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+  document.getElementById('newtl-overlay').classList.add('open');
+}
+function closeNewTL(e) { if(e.target===document.getElementById('newtl-overlay'))closeNewTLDirect(); }
+function closeNewTLDirect() { document.getElementById('newtl-overlay').classList.remove('open'); }
+function saveNewTL() {
+  const name=document.getElementById('newtl-name').value.trim();
+  if(!name){showToast('Inserisci il nome!');return;}
+  const id='tl_'+Date.now();
+  const from=parseInt(document.getElementById('newtl-from').value)||1000;
+  const to=parseInt(document.getElementById('newtl-to').value)||1900;
+  state.timelines.push({id,name,desc:document.getElementById('newtl-desc').value,viewStart:from,viewEnd:to});
+  closeNewTLDirect(); switchTL(id); showToast(`Timeline "${name}" creata!`);
+}
+function deleteTL(id) {
+  if(!confirm('Eliminare questa timeline?'))return;
+  state.timelines=state.timelines.filter(t=>t.id!==id);
+  if(state.currentTL===id)state.currentTL='generale';
+  save(); renderTLTabs(); renderCategories(); renderTimeline();
+}
+
+// ── CATEGORIES ──
+function renderCategories() {
+  const list=document.getElementById('categories-list'); list.innerHTML='';
+  const sel=document.getElementById('f-category'); sel.innerHTML='';
+  const hidden=getHiddenSet(state.currentTL);
+  state.categories.forEach(cat=>{
+    const count=state.entries.filter(e=>e.category===cat.id&&e.timeline===state.currentTL).length;
+    const isH=hidden.has(cat.id);
+    const div=document.createElement('div'); div.className='category-item';
+    div.innerHTML=`<div class="cat-dot" style="background:${cat.color}"></div><div class="cat-label" style="${isH?'opacity:.4':''}">${cat.name}</div><div class="cat-count">${count}</div><div class="cat-eye ${isH?'hidden':''}" onclick="toggleCat('${cat.id}',event)" title="Mostra/Nascondi">👁</div><div class="cat-action-btn" onclick="openEditCat('${cat.id}',event)" title="Modifica">✎</div><div class="cat-action-btn cat-del-btn" onclick="deleteCat('${cat.id}',event)" title="Elimina">✕</div>`;
+    list.appendChild(div);
+    sel.innerHTML+=`<option value="${cat.id}">${cat.name}</option>`;
+  });
+}
+function toggleCat(id,e) {
+  e.stopPropagation();
+  const set=getHiddenSet(state.currentTL);
+  if(set.has(id))set.delete(id); else set.add(id);
+  setHiddenSet(state.currentTL,set);
+  save(); renderCategories(); renderTimeline(); updateFilterChips();
+}
+function addCategory() {
+  const name=document.getElementById('new-cat-name').value.trim();
+  const color=document.getElementById('new-cat-color').value;
+  if(!name){showToast('Inserisci il nome');return;}
+  state.categories.push({id:'cat_'+Date.now(),name,color});
+  document.getElementById('new-cat-name').value='';
+  save(); renderCategories(); renderTimeline(); updateFilterChips();
+  showToast(`Categoria "${name}" aggiunta`);
+}
+function openEditCat(id, e) {
+  e.stopPropagation();
+  const cat = state.categories.find(c=>c.id===id); if(!cat)return;
+  document.getElementById('editcat-id').value    = id;
+  document.getElementById('editcat-name').value  = cat.name;
+  document.getElementById('editcat-color').value = cat.color;
+  document.getElementById('editcat-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('editcat-name').focus(),100);
+}
+function closeEditCat(ev) {
+  if(!ev||ev.target===document.getElementById('editcat-overlay'))
+    document.getElementById('editcat-overlay').classList.remove('open');
+}
+function saveEditCat() {
+  const id    = document.getElementById('editcat-id').value;
+  const name  = document.getElementById('editcat-name').value.trim();
+  const color = document.getElementById('editcat-color').value;
+  if(!name){showToast('Inserisci il nome!');return;}
+  const cat = state.categories.find(c=>c.id===id); if(!cat)return;
+  cat.name=name; cat.color=color;
+  document.getElementById('editcat-overlay').classList.remove('open');
+  save(); renderCategories(); renderTimeline(); updateFilterChips();
+  showToast(`Categoria aggiornata`);
+}
+function deleteCat(id, e) {
+  e.stopPropagation();
+  const cat = state.categories.find(c=>c.id===id); if(!cat)return;
+  const linked = state.entries.filter(en=>en.category===id);
+  if(linked.length===0){
+    if(!confirm(`Eliminare la categoria "${cat.name}"?`))return;
+    state.categories = state.categories.filter(c=>c.id!==id);
+    save(); renderCategories(); renderTimeline(); updateFilterChips();
+    showToast(`Categoria eliminata`); return;
+  }
+  // Has linked entries — open move dialog
+  document.getElementById('movecat-from-name').textContent = cat.name;
+  document.getElementById('movecat-count').textContent = linked.length;
+  document.getElementById('movecat-from-id').value = id;
+  // populate destination select (all cats except the one being deleted)
+  const sel = document.getElementById('movecat-to');
+  sel.innerHTML = '';
+  state.categories.filter(c=>c.id!==id).forEach(c=>{
+    sel.innerHTML+=`<option value="${c.id}">${c.name}</option>`;
+  });
+  document.getElementById('movecat-overlay').classList.add('open');
+}
+function closeMovecat(ev) {
+  if(!ev||ev.target===document.getElementById('movecat-overlay'))
+    document.getElementById('movecat-overlay').classList.remove('open');
+}
+function confirmMovecat() {
+  const fromId = document.getElementById('movecat-from-id').value;
+  const toId   = document.getElementById('movecat-to').value;
+  if(!toId){showToast('Seleziona una categoria di destinazione!');return;}
+  // Move all entries
+  state.entries.forEach(en=>{ if(en.category===fromId)en.category=toId; });
+  // Remove category
+  state.categories = state.categories.filter(c=>c.id!==fromId);
+  document.getElementById('movecat-overlay').classList.remove('open');
+  save(); renderCategories(); renderTimeline(); updateFilterChips();
+  const toCat = state.categories.find(c=>c.id===toId);
+  showToast(`Voci spostate in "${toCat?.name}" e categoria eliminata`);
+}
+
+// ── QUICK FILTERS ──
+function updateFilterChips() {
+  // Aggiorna chips categorie dentro il dropdown filtri
+  const catsRow = document.getElementById('filter-cats-row');
+  if (catsRow) {
+    catsRow.innerHTML = '<span class="filter-label">CAT:</span>';
+    const hidden = getHiddenSet(state.currentTL);
+    state.categories.forEach(cat => {
+      const chip = document.createElement('div');
+      const active = !hidden.has(cat.id);
+      chip.className = 'filter-chip' + (active ? ' active' : '');
+      chip.style.color = cat.color; chip.style.borderColor = cat.color;
+      chip.style.background = active ? cat.color+'22' : 'transparent';
+      chip.textContent = cat.name;
+      chip.onclick = () => toggleCat(cat.id, {stopPropagation:()=>{}});
+      catsRow.appendChild(chip);
+    });
+  }
+  // Aggiorna chips tipo
+  ['persona','periodo','fatto'].forEach(t => {
+    const el = document.getElementById('ftype-'+t);
+    if (el) el.classList.toggle('active', !!state.activeTypeFilters[t]);
+  });
+  // Aggiorna sommario filtri attivi
+  updateFilterSummary();
+}
+function updateFilterSummary() {
+  const hidden = getHiddenSet(state.currentTL);
+  const parts = [];
+  const offTypes = Object.entries(state.activeTypeFilters).filter(([,v])=>!v).map(([k])=>k);
+  if (offTypes.length) parts.push(offTypes.join(', ') + ' nascosti');
+  if (hidden.size) parts.push(hidden.size + ' categorie nascoste');
+  if (state.periodFilter) parts.push(`${state.periodFilter.from}–${state.periodFilter.to}`);
+  const el = document.getElementById('filter-active-summary');
+  if (el) el.textContent = parts.length ? parts.join(' · ') : 'Tutti visibili';
+}
+function toggleTypeFilter(type) {
+  state.activeTypeFilters[type]=!state.activeTypeFilters[type];
+  save(); updateFilterChips(); renderTimeline();
+}
+function applyPeriodFilter() {
+  const from=parseInt(document.getElementById('fp-from').value);
+  const to=parseInt(document.getElementById('fp-to').value);
+  if(isNaN(from)&&isNaN(to)){clearPeriodFilter();return;}
+  state.periodFilter={from:isNaN(from)?-99999:from,to:isNaN(to)?99999:to};
+  save(); renderTimeline(); showToast(`Filtro: ${state.periodFilter.from}–${state.periodFilter.to}`);
+}
+function clearPeriodFilter() {
+  state.periodFilter=null;
+  document.getElementById('fp-from').value='';
+  document.getElementById('fp-to').value='';
+  save(); renderTimeline();
+}
+
+// ── DATE HELPERS ──
+function dateToDecimal(y,m,d) {
+  if(y===null||y===undefined||y==='')return null;
+  let v=parseFloat(y);
+  if(m)v+=(parseInt(m)-1)/12;
+  if(d)v+=(parseInt(d)-1)/365;
+  return v;
+}
+function formatDate(y,m,d) {
+  if(y===null||y===undefined||y==='')return null;
+  let s=y<0?Math.abs(y)+' a.C.':y+' d.C.';
+  if(m)s=MONTHS[parseInt(m)]+' '+s;
+  if(d)s=d+' '+s;
+  return s;
+}
+function entryBarRange(e) {
+  if(e.type==='persona'){
+    return{start:dateToDecimal(e.powerY||e.birthY,e.powerM||e.birthM,null),end:dateToDecimal(e.resignY||e.deathY,e.resignM||e.deathM,null)};
+  }
+  if(e.type==='periodo') return{start:dateToDecimal(e.startY,e.startM,null),end:dateToDecimal(e.endY,e.endM,null)};
+  return{start:dateToDecimal(e.evY,e.evM,e.evD),end:null};
+}
+function passesPeriodFilter(e) {
+  if(!state.periodFilter)return true;
+  const{start,end}=entryBarRange(e);
+  const s=start!==null?start:(end||0);
+  const en=end!==null?end:s;
+  return en>=state.periodFilter.from&&s<=state.periodFilter.to;
+}
+
+// ── RULER ──
+const rulerCanvas=document.getElementById('ruler-canvas');
+const rulerCtx=rulerCanvas.getContext('2d');
+function drawRuler(w) {
+  const h=48; rulerCanvas.width=w; rulerCanvas.height=h;
+  rulerCtx.clearRect(0,0,w,h);
+  const tl=curTL(),span=tl.viewEnd-tl.viewStart,ppy=w/span;
+  rulerCtx.fillStyle='#e8d9b8'; rulerCtx.fillRect(0,0,w,h);
+  let major,minor;
+  if(span>800){major=100;minor=50;}
+  else if(span>300){major=50;minor=10;}
+  else if(span>100){major=25;minor=5;}
+  else if(span>40){major=10;minor=2;}
+  else if(span>15){major=5;minor=1;}
+  else{major=1;minor=1;}
+  const startM=Math.floor(tl.viewStart/minor)*minor;
+  rulerCtx.font='10px Cinzel,serif'; rulerCtx.fillStyle='#5c3d2e';
+  rulerCtx.strokeStyle='#b8860b'; rulerCtx.lineWidth=1;
+  for(let yr=startM;yr<=tl.viewEnd+minor;yr+=minor){
+    const x=Math.round((yr-tl.viewStart)*ppy);
+    const isMajor=yr%major===0;
+    rulerCtx.beginPath(); rulerCtx.moveTo(x,h-(isMajor?18:10)); rulerCtx.lineTo(x,h); rulerCtx.stroke();
+    if(isMajor)rulerCtx.fillText(yr<0?Math.abs(yr)+'aC':yr,x+3,h-21);
+  }
+  rulerCtx.strokeStyle='#b8860b'; rulerCtx.lineWidth=2;
+  rulerCtx.beginPath(); rulerCtx.moveTo(0,h-1); rulerCtx.lineTo(w,h-1); rulerCtx.stroke();
+}
+
+// ── RENDER TIMELINE ──
+function renderTimeline() {
+  checkAppLock();
+  updateZoomInfo();
+  const wrap=document.getElementById('rows-wrap');
+  const w=wrap.clientWidth;
+  const tlWrap=document.getElementById('timeline-canvas-wrap');
+  tlWrap.innerHTML=''; tlWrap.style.width=w+'px';
+  drawRuler(w);
+  const tl=curTL(),span=tl.viewEnd-tl.viewStart,ppy=w/span;
+  const hidden=getHiddenSet(state.currentTL);
+  const vis=state.entries.filter(e=>
+    e.timeline===state.currentTL&&
+    !hidden.has(e.category)&&
+    state.activeTypeFilters[e.type]&&
+    passesPeriodFilter(e)
+  );
+  const grouped={};
+  state.categories.forEach(c=>{grouped[c.id]=[];});
+  vis.forEach(e=>{if(grouped[e.category])grouped[e.category].push(e);});
+  // Ordina per data di inizio (più vecchia in alto)
+  Object.keys(grouped).forEach(catId=>{
+    grouped[catId].sort((a,b)=>{
+      const {start:sa}=entryBarRange(a);
+      const {start:sb}=entryBarRange(b);
+      return (sa??99999)-(sb??99999);
+    });
+  });
+  if(vis.length===0){
+    const es=document.createElement('div'); es.className='empty-state';
+    es.innerHTML='<h2>✦ Nessuna voce</h2><p>Clicca "+ Voce" per iniziare<br>oppure modifica i filtri</p>';
+    tlWrap.appendChild(es); tlWrap.style.height='300px'; return;
+  }
+  let totalH=0;
+  state.categories.forEach(catObj=>{
+    const entries=grouped[catObj.id];
+    if(!entries||entries.length===0)return;
+    const hdr=document.createElement('div'); hdr.className='tl-category-header';
+    hdr.style.borderLeft=`4px solid ${catObj.color}`;
+    hdr.innerHTML=`<span style="background:${catObj.color};width:8px;height:8px;border-radius:50%;display:inline-block"></span> ${catObj.name.toUpperCase()} <span style="color:#ffffff55;font-size:.55rem;margin-left:6px">(${entries.length})</span>`;
+    tlWrap.appendChild(hdr); totalH+=28;
+    // ── Compattazione righe per tutti i tipi ──
+    // Algoritmo greedy: assegna ogni voce alla prima riga in cui non si sovrappone
+    const righe = [];
+    entries.forEach(e => {
+      const {start, end} = entryBarRange(e);
+      const eStart = start ?? end ?? 0;
+      const eEnd   = end   ?? start ?? 0;
+      let placed = false;
+      for (const riga of righe) {
+        const overlap = riga.some(r => {
+          const {start:rs, end:re} = entryBarRange(r);
+          const rStart = rs ?? re ?? 0;
+          const rEnd   = re ?? rs ?? 0;
+          return eStart < rEnd + 2 && eEnd > rStart - 2;
+        });
+        if (!overlap) { riga.push(e); placed = true; break; }
+      }
+      if (!placed) righe.push([e]);
+    });
+
+    // Funzione per disegnare una singola entry in una riga DOM
+    const drawEntry = (e, row) => {
+      const {start, end} = entryBarRange(e);
+      const isU = (e.type==='fatto' ? (e.evCert||e.certainty) : e.certainty) === 'uncertain' || (e.type==='fatto' ? (e.evCert||e.certainty) : e.certainty) === 'approx';
+      if (e.type==='fatto' || end===null) {
+        if (start !== null) {
+          const x = (start - tl.viewStart) * ppy;
+          const pt = document.createElement('div');
+          pt.className = 'tl-point' + (isU ? ' uncertain' : '');
+          pt.style.left = x+'px'; pt.style.background = catObj.color; pt.title = e.name;
+          pt.onclick = () => showPopup(e.id); row.appendChild(pt);
+          const lbl = document.createElement('div');
+          lbl.style.cssText = `position:absolute;left:${x+8}px;top:50%;transform:translateY(-50%);font-size:.7rem;color:${catObj.color};white-space:nowrap;pointer-events:none;font-family:'EB Garamond',serif;font-weight:500`;
+          lbl.textContent = e.name; row.appendChild(lbl);
+        }
+      } else {
+        const x1 = Math.max(0, (start - tl.viewStart) * ppy);
+        const x2 = Math.min(w, (end   - tl.viewStart) * ppy);
+        const bw = Math.max(4, x2 - x1);
+        const bar = document.createElement('div');
+        bar.className = 'tl-bar' + (isU ? ' uncertain' : '');
+        bar.style.left = x1+'px'; bar.style.width = bw+'px'; bar.style.background = catObj.color;
+        bar.onclick = () => showPopup(e.id);
+        if (e.type === 'persona') {
+          [{y:e.birthY, m:e.birthM, color:'#ffffff88', title:'Nascita'},
+           {y:e.resignY,m:e.resignM,color:'#ffff0099', title:'Rinuncia'},
+           {y:e.deathY, m:e.deathM, color:'#ff000099', title:'Morte'}
+          ].forEach(mk => {
+            if (!mk.y) return;
+            const mx = (dateToDecimal(mk.y, mk.m, null) - start) * ppy;
+            if (mx < 0 || mx > bw) return;
+            const m = document.createElement('div'); m.className = 'tl-marker';
+            m.style.left = mx+'px'; m.style.background = mk.color; m.title = mk.title;
+            bar.appendChild(m);
+          });
+        }
+        if (e.privateNote) { const lk=document.createElement('div');lk.className='tl-lock';lk.textContent='🔒';bar.appendChild(lk); }
+        const lbl = document.createElement('div'); lbl.className = 'tl-bar-label';
+        lbl.textContent = bw > 30 ? e.name : ''; bar.appendChild(lbl);
+        row.appendChild(bar);
+      }
+    };
+
+    // Disegna tutte le righe compattate
+    righe.forEach(riga => {
+      const row = document.createElement('div'); row.className = 'tl-row'; row.style.width = w+'px';
+      riga.forEach(e => drawEntry(e, row));
+      tlWrap.appendChild(row); totalH += 44;
+    });
+  });
+  tlWrap.style.height=(totalH+40)+'px';
+}
+
+// ── POPUP ──
+function showPopup(id) {
+  const e=state.entries.find(x=>x.id===id); if(!e)return;
+  popupEntryId=id;
+  const catObj=state.categories.find(c=>c.id===e.category);
+  const color=catObj?catObj.color:'#888';
+  document.getElementById('popup-cat-badge').style.background=color;
+  document.getElementById('popup-title').textContent=e.name;
+  const badge=document.getElementById('popup-type-badge');
+  badge.style.background=color;
+  badge.textContent=e.type==='persona'?'👤 PERSONAGGIO':e.type==='periodo'?'⟷ PERIODO':'◆ EVENTO';
+  const certEl=document.getElementById('popup-cert');
+  if(e.type!=='persona'&&e.certainty&&e.certainty!=='sure'){
+    certEl.innerHTML=`<span class="cert-badge cert-${e.certainty}">${CERT_LABELS[e.certainty]}</span>`;
+  } else certEl.innerHTML='';
+  const dEl=document.getElementById('popup-dates'); dEl.innerHTML='';
+  const CERT_SYM = { sure:'', approx:' <span class="cert-badge cert-approx" style="font-size:0.6rem;padding:1px 5px">~</span>', uncertain:' <span class="cert-badge cert-uncertain" style="font-size:0.6rem;padding:1px 5px">?</span>' };
+  const addD=(label,y,m,d,cert)=>{
+    const v=formatDate(y,m,d); if(!v)return;
+    const sym = cert && cert!=='sure' ? CERT_SYM[cert]||'' : '';
+    dEl.innerHTML+=`<div class="popup-date-row"><span class="popup-date-label">${label}</span><span class="popup-date-val">${v}${sym}</span></div>`;
+  };
+  if(e.type==='persona'){
+    addD('Nascita:',e.birthY,e.birthM,e.birthD,e.birthCert);
+    addD('Salita al potere:',e.powerY,e.powerM,e.powerD,e.powerCert);
+    addD('Rinuncia/Abdicazione:',e.resignY,e.resignM,e.resignD);
+    addD('Morte:',e.deathY,e.deathM,e.deathD,e.deathCert);
+  }
+  else if(e.type==='periodo'){addD('Inizio:',e.startY,e.startM,null);addD('Fine:',e.endY,e.endM,null);}
+  else{addD('Data:',e.evY,e.evM,e.evD);}
+  const descEl=document.getElementById('popup-desc');
+  // Immagine
+  const existingImg = document.getElementById('popup-img');
+  if (existingImg) existingImg.remove();
+  if (e.image) {
+    const img = document.createElement('img');
+    img.id = 'popup-img'; img.src = e.image; img.className = 'popup-image';
+    descEl.parentNode.insertBefore(img, descEl);
+  }
+  descEl.textContent=e.desc||''; descEl.style.display=e.desc?'':'none';
+  const privEl=document.getElementById('popup-private');
+  if(e.privateNote){document.getElementById('popup-private-text').textContent=e.privateNote;privEl.style.display='';}
+  else privEl.style.display='none';
+  const biblioEl=document.getElementById('popup-biblio');
+  if(e.biblio){biblioEl.innerHTML=`<span>Fonte:</span> ${e.biblio}`;biblioEl.style.display='';}
+  else biblioEl.style.display='none';
+  const gotoWrap=document.getElementById('popup-goto-wrap'); gotoWrap.innerHTML='';
+  if(e.linkedTimeline){
+    const lt=state.timelines.find(t=>t.id===e.linkedTimeline);
+    if(lt){const btn=document.createElement('button');btn.className='popup-goto';btn.textContent=`→ Approfondisci: ${lt.name}`;btn.onclick=()=>{closePopupDirect();switchTL(lt.id);};gotoWrap.appendChild(btn);}
+  }
+  document.getElementById('popup-overlay').classList.add('open');
+}
+function closePopup(e){if(e.target===document.getElementById('popup-overlay'))closePopupDirect();}
+function closePopupDirect(){document.getElementById('popup-overlay').classList.remove('open');popupEntryId=null;}
+function editCurrentEntry(){const id=popupEntryId;closePopupDirect();openForm(id);}
+function deleteCurrentEntry(){
+  if(!popupEntryId)return;
+  const e=state.entries.find(x=>x.id===popupEntryId);
+  if(!confirm(`Eliminare "${e?.name}"?`))return;
+  state.entries=state.entries.filter(x=>x.id!==popupEntryId);
+  closePopupDirect(); save(); renderCategories(); renderTimeline(); updateFilterChips();
+  showToast('Voce eliminata');
+}
+
+// ── FORM ──
+function populateTLSelects() {
+  const ftl=document.getElementById('f-timeline'); ftl.innerHTML='';
+  state.timelines.forEach(t=>{ftl.innerHTML+=`<option value="${t.id}">${t.name}</option>`;});
+  ftl.value=state.currentTL;
+  const flt=document.getElementById('f-linked-tl'); flt.innerHTML='<option value="">— Nessuna —</option>';
+  state.timelines.forEach(t=>{flt.innerHTML+=`<option value="${t.id}">${t.name}</option>`;});
+}
+function openForm(id) {
+  editingId=id||null;
+  document.getElementById('form-title-text').textContent=id?'MODIFICA VOCE':'NUOVA VOCE';
+  populateTLSelects(); clearForm();
+  if(id){const e=state.entries.find(x=>x.id===id);if(e)fillForm(e);}
+  document.getElementById('form-overlay').classList.add('open');
+}
+function closeForm(){document.getElementById('form-overlay').classList.remove('open');editingId=null;}
+function closeFormOverlay(e){if(e.target===document.getElementById('form-overlay'))closeForm();}
+function clearForm() {
+  ['f-name','p-birth-y','p-birth-d','p-power-y','p-power-d','p-resign-y','p-resign-d','p-death-y','p-death-d','per-start-y','per-end-y','ev-y','ev-d','f-desc','f-private','f-biblio'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['p-birth-m','p-power-m','p-resign-m','p-death-m','per-start-m','per-end-m','ev-m'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-linked-tl').value='';
+  removeImage();
+  setType('persona'); setCert('sure'); resetDateCerts();
+}
+function fillForm(e) {
+  setType(e.type); setCert(e.certainty||'sure');
+  const sv=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
+  sv('f-name',e.name); sv('f-desc',e.desc); sv('f-private',e.privateNote); sv('f-biblio',e.biblio);
+  sv('f-category',e.category); sv('f-timeline',e.timeline||state.currentTL); sv('f-linked-tl',e.linkedTimeline||'');
+  setImagePreview(e.image||null);
+  if(e.type==='persona'){
+    sv('p-birth-y',e.birthY);sv('p-birth-m',e.birthM);sv('p-birth-d',e.birthD);
+    sv('p-power-y',e.powerY);sv('p-power-m',e.powerM);sv('p-power-d',e.powerD);
+    sv('p-resign-y',e.resignY);sv('p-resign-m',e.resignM);sv('p-resign-d',e.resignD);
+    sv('p-death-y',e.deathY);sv('p-death-m',e.deathM);sv('p-death-d',e.deathD);
+    // ripristina certezza per data
+    setDateCert('birth', e.birthCert  || e.certainty || 'sure');
+    setDateCert('power', e.powerCert  || e.certainty || 'sure');
+    setDateCert('death', e.deathCert  || e.certainty || 'sure');
+  }
+  else if(e.type==='periodo'){sv('per-start-y',e.startY);sv('per-start-m',e.startM);sv('per-end-y',e.endY);sv('per-end-m',e.endM);}
+  else{sv('ev-y',e.evY);sv('ev-m',e.evM);sv('ev-d',e.evD);setDateCert('ev',e.evCert||e.certainty||'sure');}
+}
+function setType(t) {
+  currentType=t;
+  ['persona','periodo','fatto'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+    const sec=document.getElementById('section-'+x);if(sec)sec.classList.toggle('hidden-section',x!==t);
+  });
+  // nascondi certezza globale per persona (ha certezza per singola data)
+  document.getElementById('form-box'||'form-overlay')?.classList.toggle('persona-mode',t==='persona');
+  document.querySelector('.form-box')?.classList.toggle('persona-mode',t==='persona');
+}
+// certezza per singola data (nascita/potere/morte)
+const _dateCerts = { birth:'sure', power:'sure', death:'sure', ev:'sure' };
+function setDateCert(dateKey, c) {
+  _dateCerts[dateKey] = c;
+  ['sure','approx','uncertain'].forEach(x => {
+    const el = document.getElementById(`cert-${dateKey}-${x}`);
+    if(el) el.classList.toggle('active', x===c);
+  });
+}
+function resetDateCerts() {
+  ['birth','power','death','ev'].forEach(k => setDateCert(k,'sure'));
+}
+function setCert(c) {
+  currentCert=c;
+  ['sure','approx','uncertain'].forEach(x=>{
+    const el=document.getElementById('cert-'+x); if(el) el.classList.toggle('active',x===c);
+  });
+}
+function saveEntry() {
+  const name=document.getElementById('f-name').value.trim();
+  const cat=document.getElementById('f-category').value;
+  const tl=document.getElementById('f-timeline').value;
+  if(!name){showToast('Inserisci il nome!');return;}
+  if(!cat){showToast('Seleziona una categoria!');return;}
+  const gv=id=>{const el=document.getElementById(id);return el?(el.value||''):'';}
+  const gn=id=>{const v=gv(id);return v!==''?parseFloat(v):null;}
+  let entry={id:editingId||('e_'+Date.now()),name,category:cat,type:currentType,timeline:tl,certainty:currentCert,desc:gv('f-desc'),privateNote:gv('f-private'),biblio:gv('f-biblio'),linkedTimeline:gv('f-linked-tl')||null,image:_currentImageData||null};
+  if(currentType==='persona'){
+    Object.assign(entry,{
+      birthY:gn('p-birth-y'),birthM:gv('p-birth-m'),birthD:gn('p-birth-d'),birthCert:_dateCerts.birth,
+      powerY:gn('p-power-y'),powerM:gv('p-power-m'),powerD:gn('p-power-d'),powerCert:_dateCerts.power,
+      resignY:gn('p-resign-y'),resignM:gv('p-resign-m'),resignD:gn('p-resign-d'),
+      deathY:gn('p-death-y'),deathM:gv('p-death-m'),deathD:gn('p-death-d'),deathCert:_dateCerts.death,
+    });
+    if(!entry.birthY&&!entry.powerY){showToast('Inserisci almeno una data!');return;}
+  } else if(currentType==='periodo'){
+    entry.startY=gn('per-start-y');entry.startM=gv('per-start-m');entry.endY=gn('per-end-y');entry.endM=gv('per-end-m');
+    if(!entry.startY||!entry.endY){showToast('Inserisci inizio e fine!');return;}
+  } else {
+    entry.evY=gn('ev-y');entry.evM=gv('ev-m');entry.evD=gn('ev-d');entry.evCert=_dateCerts.ev;
+    if(!entry.evY){showToast("Inserisci l'anno!");return;}
+  }
+  if(editingId){const idx=state.entries.findIndex(x=>x.id===editingId);if(idx!==-1)state.entries[idx]=entry;}
+  else state.entries.push(entry);
+  closeForm(); save(); renderCategories(); renderTimeline(); updateFilterChips();
+  showToast(editingId?'Voce aggiornata!':'Voce aggiunta!');
+}
+
+// ── ZOOM/PAN ──
+const MIN_YEAR = -500, MAX_YEAR = 2100, MIN_SPAN = 2, MAX_SPAN = 2600;
+
+function updateZoomInfo(){
+  const tl=curTL();
+  const from=Math.round(tl.viewStart), to=Math.round(tl.viewEnd);
+  document.getElementById('zoom-info-from').textContent = from < 0 ? Math.abs(from)+'aC' : from;
+  document.getElementById('zoom-info-to').textContent   = to   < 0 ? Math.abs(to)+'aC'   : to;
+  // sync zoom slider: span → slider (inverted: big span = slider right = zoomed out)
+  const span = tl.viewEnd - tl.viewStart;
+  const logSpan   = Math.log(span);
+  const logMin    = Math.log(MIN_SPAN);
+  const logMax    = Math.log(MAX_SPAN);
+  const sliderVal = Math.round(((logSpan - logMin) / (logMax - logMin)) * 100);
+  const zs = document.getElementById('zoom-slider');
+  if(zs && !zs._dragging) zs.value = sliderVal;
+  // sync pan slider: center position → 0-100
+  const center = (tl.viewStart + tl.viewEnd) / 2;
+  const panVal = Math.round(((center - MIN_YEAR) / (MAX_YEAR - MIN_YEAR)) * 100);
+  const ps = document.getElementById('pan-slider');
+  if(ps && !ps._dragging) ps.value = Math.max(0, Math.min(100, panVal));
+  // update slider gradient
+  updateSliderGradient('zoom-slider');
+  updateSliderGradient('pan-slider');
+}
+function updateSliderGradient(id) {
+  const el = document.getElementById(id); if(!el)return;
+  const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+  el.style.background = `linear-gradient(to right, var(--gold) 0%, var(--gold) ${pct}%, #ffffff22 ${pct}%, #ffffff22 100%)`;
+}
+function onZoomSlider(val) {
+  const tl = curTL();
+  const center = (tl.viewStart + tl.viewEnd) / 2;
+  const logMin = Math.log(MIN_SPAN), logMax = Math.log(MAX_SPAN);
+  const newSpan = Math.exp(logMin + (val / 100) * (logMax - logMin));
+  tl.viewStart = center - newSpan / 2;
+  tl.viewEnd   = center + newSpan / 2;
+  updateSliderGradient('zoom-slider');
+  save(); renderTimeline();
+}
+function onPanSlider(val) {
+  const tl   = curTL();
+  const span = tl.viewEnd - tl.viewStart;
+  const newCenter = MIN_YEAR + (val / 100) * (MAX_YEAR - MIN_YEAR);
+  tl.viewStart = newCenter - span / 2;
+  tl.viewEnd   = newCenter + span / 2;
+  updateSliderGradient('pan-slider');
+  save(); renderTimeline();
+}
+// mark slider as being dragged so updateZoomInfo doesn't fight back
+['zoom-slider','pan-slider'].forEach(id => {
+  setTimeout(()=>{
+    const el=document.getElementById(id); if(!el)return;
+    el.addEventListener('mousedown',()=>el._dragging=true);
+    el.addEventListener('touchstart',()=>el._dragging=true);
+    el.addEventListener('mouseup',()=>el._dragging=false);
+    el.addEventListener('touchend',()=>el._dragging=false);
+  },200);
+});
+
+function modView(fn){const tl=curTL();fn(tl);save();renderTimeline();}
+function zoomIn(){modView(tl=>{const c=(tl.viewStart+tl.viewEnd)/2,s=Math.max(MIN_SPAN,(tl.viewEnd-tl.viewStart)*.5);tl.viewStart=c-s/2;tl.viewEnd=c+s/2;});}
+function zoomOut(){modView(tl=>{const c=(tl.viewStart+tl.viewEnd)/2,s=Math.min(MAX_SPAN,(tl.viewEnd-tl.viewStart)*2);tl.viewStart=c-s/2;tl.viewEnd=c+s/2;});}
+function panLeft(){modView(tl=>{const d=(tl.viewEnd-tl.viewStart)*.3;tl.viewStart-=d;tl.viewEnd-=d;});}
+function panRight(){modView(tl=>{const d=(tl.viewEnd-tl.viewStart)*.3;tl.viewStart+=d;tl.viewEnd+=d;});}
+function resetView(){modView(tl=>{tl.viewStart=1000;tl.viewEnd=1900;});}
+function goToYear(){
+  const yr=parseInt(document.getElementById('goto-year').value);if(isNaN(yr))return;
+  modView(tl=>{const span=tl.viewEnd-tl.viewStart;tl.viewStart=yr-span/2;tl.viewEnd=yr+span/2;});
+}
+function goToRange(){
+  const from=parseInt(document.getElementById('range-from').value);
+  const to=parseInt(document.getElementById('range-to').value);
+  if(isNaN(from)||isNaN(to)||from>=to){showToast('Inserisci un intervallo valido');return;}
+  modView(tl=>{tl.viewStart=from;tl.viewEnd=to;});
+  showToast(`Vista: ${from} – ${to}`);
+}
+
+let dragStart=null,dragVS=null;
+const rowsWrap=document.getElementById('rows-wrap');
+rowsWrap.addEventListener('mousedown',e=>{
+  if(e.target!==rowsWrap&&e.target!==document.getElementById('timeline-canvas-wrap')&&!e.target.classList.contains('tl-row'))return;
+  dragStart=e.clientX;dragVS=curTL().viewStart;rowsWrap.classList.add('grabbing');
+});
+window.addEventListener('mousemove',e=>{
+  if(dragStart===null)return;
+  const tl=curTL(),w=rowsWrap.clientWidth,span=tl.viewEnd-tl.viewStart;
+  const dyrs=-(e.clientX-dragStart)/w*span;
+  tl.viewStart=dragVS+dyrs;tl.viewEnd=tl.viewStart+span;renderTimeline();
+});
+window.addEventListener('mouseup',()=>{if(dragStart!==null){save();}dragStart=null;rowsWrap.classList.remove('grabbing');});
+rowsWrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const tl=curTL(),rect=rowsWrap.getBoundingClientRect();
+  const ratio=(e.clientX-rect.left)/rect.width,span=tl.viewEnd-tl.viewStart;
+  const pivot=tl.viewStart+ratio*span,factor=e.deltaY>0?1.15:0.87;
+  const ns=Math.min(3000,Math.max(2,span*factor));
+  tl.viewStart=pivot-ratio*ns;tl.viewEnd=pivot+(1-ratio)*ns;
+  save();renderTimeline();
+},{passive:false});
+let touchSX=null,touchVS=null,touch2Dist=null,touch2VS=null,touch2VE=null;
+rowsWrap.addEventListener('touchstart',e=>{
+  if(e.touches.length===1){
+    touchSX=e.touches[0].clientX; touchVS=curTL().viewStart;
+    touch2Dist=null;
+  } else if(e.touches.length===2){
+    // pinch start
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    touch2Dist=Math.sqrt(dx*dx+dy*dy);
+    touch2VS=curTL().viewStart; touch2VE=curTL().viewEnd;
+    touchSX=null;
+  }
+});
+rowsWrap.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===2 && touch2Dist!==null){
+    // pinch zoom
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    const newDist=Math.sqrt(dx*dx+dy*dy);
+    const ratio=touch2Dist/newDist; // >1 = zooming out, <1 = zooming in
+    const oldSpan=touch2VE-touch2VS;
+    const newSpan=Math.min(MAX_SPAN,Math.max(MIN_SPAN,oldSpan*ratio));
+    const center=(touch2VS+touch2VE)/2;
+    const tl=curTL(); tl.viewStart=center-newSpan/2; tl.viewEnd=center+newSpan/2;
+    renderTimeline();
+  } else if(e.touches.length===1 && touchSX!==null){
+    // pan
+    const tl=curTL(),w=rowsWrap.clientWidth,span=tl.viewEnd-tl.viewStart;
+    const dyrs=-(e.touches[0].clientX-touchSX)/w*span;
+    tl.viewStart=touchVS+dyrs; tl.viewEnd=tl.viewStart+span;
+    renderTimeline();
+  }
+},{passive:false});
+rowsWrap.addEventListener('touchend',()=>{save();touchSX=null;touch2Dist=null;});
+
+function toggleSidebar(){
+  const aside = document.getElementById('sidebar');
+  const tab   = document.getElementById('sidebar-pull-tab');
+  const tl    = document.querySelector('.timeline-area');
+  aside.classList.toggle('collapsed');
+  const collapsed = aside.classList.contains('collapsed');
+  if (tab) tab.style.left = collapsed ? '0' : 'var(--sidebar-w)';
+  if (tl)  tl.style.marginLeft = collapsed ? '0' : 'var(--sidebar-w)';
+  setTimeout(()=>renderTimeline(), 260);
+}
+function openSidebarAndFocus(){
+  const aside = document.getElementById('sidebar');
+  aside.classList.remove('collapsed');
+  const tab = document.getElementById('sidebar-pull-tab');
+  const tl  = document.querySelector('.timeline-area');
+  if (tab) tab.style.left = 'var(--sidebar-w)';
+  if (tl)  tl.style.marginLeft = 'var(--sidebar-w)';
+  setTimeout(()=>{ document.getElementById('new-cat-name')?.focus(); },300);
+}
+function checkAppLock() {
+  const lock = document.getElementById('app-lock');
+  if (!lock) return;
+  const hasData = state.categories.length > 0 || state.entries.length > 0;
+  lock.classList.toggle('visible', !hasData);
+}
+
+// ── EXPORT/IMPORT ──
+function exportData(){
+  const data=JSON.stringify(state,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='chronos-timeline.json';a.click();
+  showToast('Timeline esportata!');
+}
+function importData(){document.getElementById('import-file').click();}
+let _importPending = null;
+function handleImport(e){
+  const file=e.target.files[0]; if(!file)return;
+  const isXlsx = file.name.match(/\.xlsx?$/i);
+  if(isXlsx){ readExcelFile(file); e.target.value=''; return; }
+  // JSON path
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!d.entries)throw new Error();
+      _importPending=d;
+      document.getElementById('import-modal-overlay').classList.add('open');
+    }catch(err){showToast('Errore: file non valido');}
+  };
+  reader.readAsText(file); e.target.value='';
+}
+
+// ── EXCEL IMPORT ──
+function readExcelFile(file){
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = new Uint8Array(ev.target.result);
+      const wb   = XLSX.read(data, { type:'array' });
+      const entries = [];
+      let warnings = [];
+
+      wb.SheetNames.forEach(sheetName => {
+        // Salta il foglio Istruzioni
+        if (sheetName === 'Istruzioni') return;
+        const ws = wb.Sheets[sheetName];
+
+        // Leggi come array di array per gestire intestazioni su più righe
+        const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+        if (!raw.length) return;
+
+        // Trova la riga delle intestazioni vere: quella che contiene "Nome" o "nome"
+        let headerRowIdx = 0;
+        for (let i = 0; i < Math.min(6, raw.length); i++) {
+          const rowLow = raw[i].map(c => String(c).toLowerCase().trim());
+          if (rowLow.includes('nome') || rowLow.includes('name')) { headerRowIdx = i; break; }
+        }
+        const headers = raw[headerRowIdx].map(c => String(c).trim()
+          .toLowerCase()
+          .replace(/\s+/g,'_')
+          .replace(/[*\/]/g,'')
+          .replace(/\./g,'')
+        );
+
+        // Righe dati: tutto dopo la riga intestazioni
+        const dataRows = raw.slice(headerRowIdx + 1);
+
+        dataRows.forEach((rowArr, idx) => {
+          // Mappa array → oggetto con chiavi normalizzate
+          const r = {};
+          headers.forEach((h, i) => { r[h] = String(rowArr[i] ?? '').trim(); });
+
+          const name = r['nome'] || r['name'] || '';
+          const type = (r['tipo'] || r['type'] || '').toLowerCase();
+          const cat  = r['categoria'] || r['category'] || 'Battaglie ed eventi';
+
+          // Salta righe vuote, di esempio o di istruzione
+          if (!name || name.startsWith('Es.') || name.startsWith('Compila') || name.startsWith('—')) return;
+          // Salta righe senza tipo valido (es. riga gruppi rimasta)
+          if (type && !['persona','periodo','fatto'].includes(type)) return;
+
+          let catObj = state.categories.find(c => c.name.toLowerCase() === cat.toLowerCase());
+          if (!catObj) {
+            const colors = ['#4a6fa5','#e07b39','#5b8c5a','#9b59b6','#c0392b','#16a085'];
+            catObj = { id:'cat_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), name:cat, color:colors[state.categories.length % colors.length] };
+            state.categories.push(catObj);
+          }
+
+          const cert = r['certezza'] || r['certezza_date'] || 'sure';
+          const desc = r['descrizione'] || r['description'] || '';
+          const priv = r['nota_privata'] || r['private'] || '';
+          const bibl = r['riferimento_bib'] || r['riferimento_bibliografico'] || r['biblio'] || '';
+
+          const gn = key => { const v=r[key]; if(v===undefined||v==='')return null; const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?null:n; };
+          const gs = key => { const v=r[key]; if(v===undefined||v==='')return null; const n=parseInt(String(v)); return isNaN(n)?null:String(n); };
+
+          // Determina tipo: se manca usa euristica dai campi presenti
+          let finalType = type;
+          if (!finalType || finalType === '') {
+            // foglio Personaggi non ha colonna Tipo: usa euristica
+            if (r['anno_potere'] !== undefined || r['anno_nascita'] !== undefined) finalType = 'persona';
+            else if (r['anno_fine'] !== undefined) finalType = 'periodo';
+            else finalType = 'fatto';
+          }
+
+          // ID stabile basato su nome+categoria+anno: stessa voce = stesso ID ogni importazione
+          const stableKey = (name + '|' + cat + '|' + (r['anno_potere']||r['anno_nascita']||r['anno_inizio']||r['anno_evento']||'')).toLowerCase().replace(/\s+/g,'_');
+          const stableId = 'xl_' + stableKey.split('').reduce((h,c)=>(Math.imul(31,h)+c.charCodeAt(0))|0,0).toString(36).replace('-','n');
+
+          let entry = {
+            id: stableId,
+            name, type: finalType, category: catObj.id,
+            timeline: state.currentTL,
+            certainty: cert, desc, privateNote: priv, biblio: bibl, linkedTimeline: null
+          };
+
+          if (finalType === 'persona') {
+            Object.assign(entry, {
+              birthY: gn('anno_nascita'),  birthM: gs('mese_nascita'),  birthD: gn('giorno_nascita'), birthCert: r['certezza_nascita'] || cert,
+              powerY: gn('anno_potere'),   powerM: gs('mese_potere'),   powerD: null,                 powerCert: r['certezza_potere']  || cert,
+              resignY:gn('anno_rinuncia'), resignM:gs('mese_rinuncia'), resignD:null,
+              deathY: gn('anno_morte'),    deathM: gs('mese_morte'),    deathD: gn('giorno_morte'),   deathCert: r['certezza_morte']   || cert,
+            });
+            if (!entry.birthY && !entry.powerY) {
+              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno nascita o Anno potere — saltata`);
+              return;
+            }
+          } else if (finalType === 'periodo') {
+            entry.startY = gn('anno_inizio'); entry.startM = gs('mese_inizio'); entry.startD = gn('giorno_inizio');
+            entry.endY   = gn('anno_fine');   entry.endM   = gs('mese_fine');
+            if (!entry.startY || !entry.endY) {
+              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno inizio o Anno fine — saltata`);
+              return;
+            }
+          } else {
+            entry.evY = gn('anno_evento'); entry.evM = gs('mese_evento') || gs('mese_inizio'); entry.evD = null;
+            if (!entry.evY) {
+              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno evento — saltata`);
+              return;
+            }
+          }
+          entries.push(entry);
+        });
+      });
+
+      if (entries.length === 0) {
+        showToast('Nessuna voce trovata nel file Excel. Controlla le intestazioni.');
+        if (warnings.length) console.warn('Avvisi:\n'+warnings.join('\n'));
+        return;
+      }
+
+      _importPending = { _isExcel:true, entries, warnings };
+      const countEl = document.getElementById('xl-import-count');
+      const warnEl  = document.getElementById('xl-import-warnings');
+      if (countEl) countEl.textContent = entries.length;
+      if (warnEl) { warnEl.style.display = warnings.length ? '' : 'none'; warnEl.textContent = warnings.length ? `⚠ ${warnings.length} riga/e saltata/e` : ''; }
+      document.getElementById('import-excel-overlay').classList.add('open');
+
+    } catch(err) {
+      console.error(err);
+      showToast('Errore nella lettura del file Excel');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+function closeExcelModal(ev){
+  if(!ev||ev.target===document.getElementById('import-excel-overlay'))
+    document.getElementById('import-excel-overlay').classList.remove('open');
+}
+function doExcelMerge(){
+  if(!_importPending||!_importPending._isExcel)return;
+  const {entries} = _importPending;
+  let added=0, updated=0;
+  entries.forEach(e=>{
+    const idx = state.entries.findIndex(x=>x.id===e.id);
+    if(idx !== -1){
+      // aggiorna la voce esistente mantenendo la nota privata
+      state.entries[idx] = { ...e, privateNote: state.entries[idx].privateNote || e.privateNote };
+      updated++;
+    } else {
+      state.entries.push(e); added++;
+    }
+  });
+  document.getElementById('import-excel-overlay').classList.remove('open');
+  _importPending=null;
+  save(); renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
+  showToast(`${added} voci aggiunte, ${updated} aggiornate`);
+}
+function doExcelOverwrite(){
+  if(!_importPending||!_importPending._isExcel)return;
+  state.entries = state.entries.filter(e=>e.timeline!==state.currentTL);
+  _importPending.entries.forEach(e=>state.entries.push(e));
+  document.getElementById('import-excel-overlay').classList.remove('open');
+  _importPending=null;
+  save(); renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
+  showToast(`Excel importato (sostituzione timeline corrente)!`);
+}
+function closeImportModal(ev){
+  if(!ev||ev.target===document.getElementById('import-modal-overlay'))
+    document.getElementById('import-modal-overlay').classList.remove('open');
+}
+function doImportOverwrite(){
+  const d=_importPending; if(!d)return;
+  ['timelines','currentTL','entries','categories','activeTypeFilters','periodFilter','hiddenCats'].forEach(k=>{if(d[k]!==undefined)state[k]=d[k];});
+  document.getElementById('import-modal-overlay').classList.remove('open');
+  _importPending=null;
+  save();renderTLTabs();renderCategories();renderTimeline();updateFilterChips();
+  showToast('Timeline importata (sostituzione)!');
+}
+function doImportMerge(){
+  const d=_importPending; if(!d)return;
+  // Merge categories (add new ones by id)
+  if(d.categories){
+    d.categories.forEach(dc=>{
+      if(!state.categories.find(c=>c.id===dc.id)) state.categories.push(dc);
+    });
+  }
+  // Merge timelines
+  if(d.timelines){
+    d.timelines.forEach(dt=>{
+      if(!state.timelines.find(t=>t.id===dt.id)) state.timelines.push(dt);
+    });
+  }
+  // Merge entries: skip duplicates by id, add new ones
+  if(d.entries){
+    let added=0, skipped=0;
+    d.entries.forEach(de=>{
+      if(state.entries.find(e=>e.id===de.id)){ skipped++; }
+      else { state.entries.push(de); added++; }
+    });
+    document.getElementById('import-modal-overlay').classList.remove('open');
+    _importPending=null;
+    save();renderTLTabs();renderCategories();renderTimeline();updateFilterChips();
+    showToast(`Unione completata: ${added} voci aggiunte, ${skipped} già presenti`);
+  }
+}
+
+// ── EXPORT MENU ──
+function toggleExportMenu() {
+  document.getElementById('export-menu').classList.toggle('open');
+}
+function closeExportMenu() {
+  document.getElementById('export-menu').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#export-menu') && !e.target.closest('.header-btn'))
+    closeExportMenu();
+});
+
+// ── IMAGE HANDLING ──
+let _currentImageData = null;
+function handleImageUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 2*1024*1024) { showToast('Immagine troppo grande (max 2MB)'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _currentImageData = ev.target.result;
+    document.getElementById('img-preview-src').src = _currentImageData;
+    document.getElementById('img-preview').style.display = '';
+    document.getElementById('img-upload-label').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function removeImage() {
+  _currentImageData = null;
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-upload-label').style.display = '';
+  document.getElementById('f-image-file').value = '';
+}
+function setImagePreview(dataUrl) {
+  if (dataUrl) {
+    _currentImageData = dataUrl;
+    document.getElementById('img-preview-src').src = dataUrl;
+    document.getElementById('img-preview').style.display = '';
+    document.getElementById('img-upload-label').style.display = 'none';
+  } else {
+    removeImage();
+  }
+}
+
+// ── EXPORT IMAGE ──
+function exportImage() {
+  showToast('Preparazione immagine...');
+  const wrap = document.getElementById('timeline-canvas-wrap');
+  const ruler = document.querySelector('.ruler-wrap');
+  // Usa html2canvas se disponibile, altrimenti fallback SVG semplice
+  if (window.html2canvas) {
+    const container = document.querySelector('.timeline-area');
+    html2canvas(container, { backgroundColor:'#2c1810', scale:2, useCORS:true }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'chronos-timeline.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('Immagine salvata!');
+    }).catch(()=>showToast('Errore esportazione immagine'));
+  } else {
+    // Carica html2canvas dinamicamente
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => exportImage();
+    script.onerror = () => showToast('Errore: impossibile caricare html2canvas');
+    document.head.appendChild(script);
+  }
+}
+
+// ── EXPORT PDF ──
+function exportPDF() {
+  showToast('Preparazione PDF...');
+  const doExport = () => {
+    const container = document.querySelector('.timeline-area');
+    html2canvas(container, { backgroundColor:'#2c1810', scale:2, useCORS:true }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const ratio = Math.min(pdfW / canvas.width, pdfH / canvas.height);
+      const imgW = canvas.width * ratio;
+      const imgH = canvas.height * ratio;
+      const x = (pdfW - imgW) / 2;
+      const y = (pdfH - imgH) / 2;
+      pdf.addImage(imgData, 'PNG', x, y, imgW, imgH);
+      pdf.save('chronos-timeline.pdf');
+      showToast('PDF salvato!');
+    }).catch(()=>showToast('Errore esportazione PDF'));
+  };
+
+  const loadLib = (src, check, cb) => {
+    if (check()) { cb(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = cb;
+    s.onerror = () => showToast('Errore caricamento libreria PDF');
+    document.head.appendChild(s);
+  };
+
+  loadLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    () => !!window.html2canvas,
+    () => loadLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      () => !!window.jspdf,
+      doExport
+    )
+  );
+}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
+
+// ── DEMO DATA ──
+function loadDemo() {
+  if(state.entries.length>0)return;
+  state.timelines.push({id:'tl_papi_xi',name:'Papi XI sec.',desc:'Approfondimento',viewStart:1050,viewEnd:1130});
+  state.entries=[
+    {id:'d1',name:'Papa Gregorio VII',category:'papi',type:'persona',timeline:'generale',certainty:'sure',birthY:1020,powerY:1073,powerM:4,powerD:22,deathY:1085,deathM:5,deathD:25,desc:'Protagonista della lotta per le investiture contro Enrico IV.',privateNote:'Verificare data di nascita: alcune fonti dicono 1015.',biblio:'Blumenthal, U.-R., The Investiture Controversy, Philadelphia 1988',linkedTimeline:'tl_papi_xi'},
+    {id:'d2',name:'Enrico IV, Imperatore',category:'re',type:'persona',timeline:'generale',certainty:'sure',birthY:1050,powerY:1056,deathY:1106,deathM:8,deathD:7,desc:'Re di Germania e Sacro Romano Imperatore. Scomunicato da Gregorio VII nel 1076.',biblio:'Cowdrey, H.E.J., Gregory VII, Oxford 1998'},
+    {id:'d3',name:'Prima Crociata',category:'battaglie',type:'periodo',timeline:'generale',certainty:'sure',startY:1095,startM:11,endY:1099,endM:7,desc:'Spedizione militare indetta da Papa Urbano II. Conquista di Gerusalemme.',biblio:'Runciman, S., Storia delle Crociate, Einaudi 1993'},
+    {id:'d4',name:'Magna Carta',category:'concili',type:'fatto',timeline:'generale',certainty:'sure',evY:1215,evM:6,evD:15,desc:'Documento che limitava il potere regio in Inghilterra.',biblio:'Holt, J.C., Magna Carta, Cambridge UP 1992'},
+    {id:'d5',name:'Federico II di Svevia',category:'nobili',type:'persona',timeline:'generale',certainty:'sure',birthY:1194,birthM:12,birthD:26,powerY:1220,deathY:1250,deathM:12,deathD:13,desc:'"Stupor Mundi". Sacro Romano Imperatore, re di Sicilia e Gerusalemme.',biblio:'Kantorowicz, E., Federico II Imperatore, Garzanti 2000'},
+    {id:'d6',name:'Concilio di Clermont',category:'concili',type:'fatto',timeline:'generale',certainty:'sure',evY:1095,evM:11,desc:'Urbano II proclama la Prima Crociata.'},
+    // timeline approfondimento
+    {id:'d7',name:'Papa Gregorio VII',category:'papi',type:'persona',timeline:'tl_papi_xi',certainty:'sure',birthY:1020,powerY:1073,powerM:4,deathY:1085,deathM:5,deathD:25,desc:'Nato Ildebrando di Soana. Avviò la riforma gregoriana e il Dictatus Papae (1075).',privateNote:'Studiare il Dictatus Papae in dettaglio.',biblio:'Blumenthal, U.-R., The Investiture Controversy, Philadelphia 1988'},
+    {id:'d8',name:'Papa Alessandro II',category:'papi',type:'persona',timeline:'tl_papi_xi',certainty:'approx',birthY:1010,powerY:1061,deathY:1073,desc:'Predecessore di Gregorio VII. Avviò le riforme gregoriane.'},
+    {id:'d9',name:'Scomunica di Enrico IV',category:'battaglie',type:'fatto',timeline:'tl_papi_xi',certainty:'sure',evY:1076,evM:2,desc:'Gregorio VII scomunica Enrico IV, liberando i suoi sudditi dal giuramento di fedeltà.'},
+    {id:'d10',name:'Umiliazione di Canossa',category:'battaglie',type:'fatto',timeline:'tl_papi_xi',certainty:'sure',evY:1077,evM:1,desc:'Enrico IV, scalzo nella neve, ottiene l\'assoluzione dalla scomunica.'},
+  ];
+}
+
+window.addEventListener('resize',()=>renderTimeline());
+
+async function init(){
+  populateMonthSelects();
+  const hasData = await load();
+  if (!hasData) loadDemo();
+  renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
+  // Sidebar chiusa all'avvio
+  const aside = document.getElementById('sidebar');
+  aside.classList.add('collapsed');
+  const tl = document.querySelector('.timeline-area');
+  if (tl) tl.style.marginLeft = '0';
+  checkAppLock();
+}
+init();
+</script>
+</body>
+</html>
