@@ -85,12 +85,11 @@
   .filter-period-input:focus { outline:none; border-color:var(--gold); }
   .filter-go { background:var(--gold); border:none; color:var(--ink); font-family:'Cinzel',serif; font-size:0.52rem; padding:4px 8px; cursor:pointer; border-radius:3px; letter-spacing:1px; }
 
-  /* MAIN LAYOUT */
-  .app-body { display:flex; flex:1; overflow:hidden; }
-
-  /* SIDEBAR */
-  aside { width:var(--sidebar-w); background:#2c1810ee; border-right:2px solid var(--gold); display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto; z-index:50; transition:transform .25s; }
-  aside.collapsed { transform:translateX(calc(-1 * var(--sidebar-w))); position:absolute; height:100%; }
+  .app-body { display:flex; flex:1; overflow:hidden; position:relative; }
+  aside { width:var(--sidebar-w); background:#2c1810ee; border-right:2px solid var(--gold); display:flex; flex-direction:column; flex-shrink:0; overflow-y:auto; z-index:50; transition:transform .25s, width .25s; position:absolute; height:100%; }
+  aside.collapsed { transform:translateX(calc(-1 * var(--sidebar-w))); }
+  aside:not(.collapsed) + .sidebar-pull-tab { left:var(--sidebar-w); }
+  .timeline-area { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; margin-left:0; transition:margin-left .25s; }
   .sidebar-section { padding:10px 12px; border-bottom:1px solid #ffffff22; }
   .sidebar-title { font-family:'Cinzel',serif; color:var(--gold-light); font-size:0.58rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
   .category-item { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:3px; cursor:pointer; transition:background .15s; }
@@ -156,9 +155,9 @@
   .rows-wrap { flex:1; overflow:auto; position:relative; cursor:grab; }
   .rows-wrap.grabbing { cursor:grabbing; }
   #timeline-canvas-wrap { position:relative; }
-  .tl-category-header { position:sticky; left:0; z-index:20; display:flex; align-items:center; gap:6px; padding:4px 10px; font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:1.5px; color:#fff; background:var(--ink); border-bottom:1px solid var(--gold); width:100%; margin-top:8px; }
+  .tl-category-header { position:sticky; left:0; z-index:20; display:flex; align-items:center; gap:6px; padding:4px 10px; font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:1.5px; color:#fff; background:var(--ink); border-bottom:1px solid rgba(184,134,11,0.3); width:100%; margin-top:6px; }
   .tl-category-header:first-child { margin-top:0; }
-  .tl-row { height:var(--row-h); position:relative; border-bottom:1px solid var(--parchment-dark); }
+  .tl-row { height:var(--row-h); position:relative; border-bottom:1px solid rgba(184,134,11,0.12); }
   .tl-row:hover { background:rgba(184,134,11,0.04); }
   .tl-bar { position:absolute; top:6px; height:calc(var(--row-h) - 12px); border-radius:3px; cursor:pointer; display:flex; align-items:center; padding:0 6px; overflow:hidden; transition:filter .15s,transform .1s; white-space:nowrap; box-shadow:1px 1px 3px rgba(0,0,0,0.25); min-width:4px; }
   .tl-bar:hover { filter:brightness(1.15); transform:scaleY(1.08); z-index:10; }
@@ -266,6 +265,22 @@
 
   /* nascondi certezza globale quando tipo=persona */
   .persona-mode #global-cert-group { display:none; }
+  /* IMAGE UPLOAD */
+  .img-upload-wrap { display:flex; flex-direction:column; gap:6px; }
+  .img-upload-btn { display:inline-flex; align-items:center; gap:6px; background:var(--parchment-dark); border:1px dashed var(--gold); color:var(--ink); font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; padding:7px 12px; border-radius:3px; cursor:pointer; transition:background .15s; }
+  .img-upload-btn:hover { background:var(--gold); }
+  .img-preview { position:relative; display:inline-block; max-width:100%; }
+  .img-preview img { max-width:100%; max-height:140px; border-radius:3px; border:1px solid var(--gold); object-fit:cover; display:block; }
+  .img-remove-btn { position:absolute; top:4px; right:4px; background:rgba(44,24,16,0.8); border:none; color:#fff; width:20px; height:20px; border-radius:50%; cursor:pointer; font-size:0.7rem; display:flex; align-items:center; justify-content:center; }
+  .popup-image { width:100%; max-height:200px; object-fit:cover; border-radius:3px; margin-bottom:10px; border:1px solid var(--parchment-dark); display:block; }
+
+  /* EXPORT MENU */
+  .export-menu { position:absolute; top:calc(var(--header-h) + 4px); right:80px; background:var(--ink); border:1px solid var(--gold); border-radius:4px; min-width:180px; z-index:200; box-shadow:0 4px 16px rgba(0,0,0,0.4); display:none; }
+  .export-menu.open { display:block; }
+  .export-menu-item { padding:10px 14px; font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:1px; color:var(--gold-light); cursor:pointer; border-bottom:1px solid #ffffff11; transition:background .15s; }
+  .export-menu-item:hover { background:#ffffff15; }
+  .export-menu-item:last-child { border-bottom:none; }
+
   ::-webkit-scrollbar { width:5px; height:5px; }
   ::-webkit-scrollbar-track { background:var(--parchment-dark); }
   ::-webkit-scrollbar-thumb { background:var(--gold); border-radius:3px; }
@@ -274,8 +289,28 @@
   .toast { position:fixed; bottom:20px; right:20px; background:var(--ink); color:var(--gold-light); font-family:'Cinzel',serif; font-size:0.7rem; letter-spacing:1px; padding:9px 14px; border-radius:3px; border-left:3px solid var(--gold); z-index:500; opacity:0; transform:translateY(10px); transition:all .3s; pointer-events:none; }
   .toast.show { opacity:1; transform:translateY(0); }
 
-  /* SIDEBAR TOGGLE MOBILE */
-  .sidebar-toggle { display:none; background:none; border:none; color:var(--gold-light); font-size:1.2rem; cursor:pointer; padding:0 4px; }
+  /* SIDEBAR PULL TAB */
+  .sidebar-pull-tab {
+    position:absolute; left:0; top:50%; transform:translateY(-50%);
+    z-index:60; background:var(--gold); border:none; color:var(--ink);
+    width:18px; height:48px; cursor:pointer; border-radius:0 4px 4px 0;
+    font-size:0.6rem; display:flex; align-items:center; justify-content:center;
+    box-shadow:2px 0 6px rgba(0,0,0,0.3); transition:left .25s;
+    writing-mode:vertical-rl;
+  }
+  aside:not(.collapsed) ~ .sidebar-pull-tab,
+  .app-body:has(aside:not(.collapsed)) .sidebar-pull-tab { left:var(--sidebar-w); }
+
+  /* APP LOCK OVERLAY */
+  .app-lock {
+    display:none; position:absolute; inset:0; z-index:150;
+    background:rgba(44,24,16,0.82); align-items:center; justify-content:center;
+    flex-direction:column; gap:16px; backdrop-filter:blur(2px);
+  }
+  .app-lock.visible { display:flex; }
+  .app-lock-title { font-family:'Cinzel',serif; color:var(--gold-light); font-size:1rem; letter-spacing:3px; }
+  .app-lock-msg { font-family:'EB Garamond',serif; color:#e8d9b888; font-size:0.9rem; font-style:italic; text-align:center; max-width:280px; line-height:1.6; }
+  .app-lock-btn { background:var(--gold); border:none; color:var(--ink); font-family:'Cinzel',serif; font-size:0.65rem; letter-spacing:2px; padding:10px 22px; border-radius:3px; cursor:pointer; }
 
   /* LOGIN SCREEN */
   .login-screen {
@@ -511,15 +546,19 @@
   <div class="sync-dot" id="sync-dot" title="Stato sincronizzazione"></div>
   <button class="header-btn accent" onclick="openForm()">+ Voce</button>
   <button class="header-btn" onclick="shareCurrentTL()" id="btn-share" title="Condividi timeline" style="display:none">⇧ Condividi</button>
-  <button class="header-btn" onclick="exportData()">↓ Esporta</button>
+  <button class="header-btn" onclick="toggleExportMenu()">↓ Esporta ▾</button>
   <button class="header-btn" onclick="importData()">↑ Importa</button>
   <input type="file" id="import-file" accept=".json,.xlsx,.xls" style="display:none" onchange="handleImport(event)">
-  <!-- User badge (shown when logged in) -->
   <div class="user-badge" id="user-badge" style="display:none" onclick="toggleUserMenu()">
     <img class="user-avatar" id="user-avatar" src="" alt="">
     <span class="user-name" id="user-name"></span>
   </div>
 </header>
+<div class="export-menu" id="export-menu">
+  <div class="export-menu-item" onclick="exportData();closeExportMenu()">💾 Esporta JSON</div>
+  <div class="export-menu-item" onclick="exportImage();closeExportMenu()">🖼 Salva come immagine</div>
+  <div class="export-menu-item" onclick="exportPDF();closeExportMenu()">📄 Salva come PDF</div>
+</div>
 
 <!-- User dropdown menu -->
 <div class="user-menu" id="user-menu">
@@ -563,7 +602,8 @@
 </div>
 
 <div class="app-body">
-  <aside id="sidebar">
+  <button class="sidebar-pull-tab" id="sidebar-pull-tab" onclick="toggleSidebar()" title="Apri/Chiudi pannello">◈</button>
+  <aside id="sidebar" class="collapsed">
     <div class="zoom-controls">
       <div class="zoom-label">◈ Navigazione</div>
 
@@ -634,6 +674,12 @@
   </aside>
 
   <div class="timeline-area">
+    <!-- BLOCCO APP: appare se non ci sono categorie o voci -->
+    <div class="app-lock" id="app-lock">
+      <div class="app-lock-title">✦ CHRONOS</div>
+      <div class="app-lock-msg">Per iniziare aggiungi una categoria dal pannello a sinistra, oppure importa un file Excel o JSON.</div>
+      <button class="app-lock-btn" onclick="openSidebarAndFocus()">◈ Apri pannello</button>
+    </div>
     <div class="ruler-wrap"><canvas id="ruler-canvas"></canvas></div>
     <div class="rows-wrap" id="rows-wrap">
       <div id="timeline-canvas-wrap"></div>
@@ -790,10 +836,20 @@
       <!-- FATTO -->
       <div id="section-fatto" class="hidden-section">
         <div class="form-divider">Data dell'evento</div>
-        <div class="date-triple" style="margin-top:10px">
-          <div class="form-group"><label class="form-label">Anno *</label><input class="form-input" id="ev-y" type="number" placeholder="1215"></div>
-          <div class="form-group"><label class="form-label">Mese</label><select class="form-select" id="ev-m"></select></div>
-          <div class="form-group"><label class="form-label">Giorno</label><input class="form-input" id="ev-d" type="number" min="1" max="31"></div>
+        <div class="date-block" style="margin-top:10px">
+          <div class="date-block-header">
+            <label class="form-label" style="margin:0">Data</label>
+            <div class="date-cert-row">
+              <button class="cert-btn-sm sure active"  id="cert-ev-sure"      onclick="setDateCert('ev','sure')">✓</button>
+              <button class="cert-btn-sm approx"        id="cert-ev-approx"    onclick="setDateCert('ev','approx')">~</button>
+              <button class="cert-btn-sm uncertain"     id="cert-ev-uncertain" onclick="setDateCert('ev','uncertain')">?</button>
+            </div>
+          </div>
+          <div class="date-triple">
+            <div class="form-group"><label class="form-label">Anno *</label><input class="form-input" id="ev-y" type="number" placeholder="1215"></div>
+            <div class="form-group"><label class="form-label">Mese</label><select class="form-select" id="ev-m"></select></div>
+            <div class="form-group"><label class="form-label">Giorno</label><input class="form-input" id="ev-d" type="number" min="1" max="31"></div>
+          </div>
         </div>
       </div>
 
@@ -816,6 +872,21 @@
           <option value="">— Nessuna —</option>
         </select>
         <p class="form-hint">Il pulsante "Vai alla timeline" apparirà nel riquadro dettaglio.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Immagine</label>
+        <div class="img-upload-wrap" id="img-upload-wrap">
+          <div class="img-preview" id="img-preview" style="display:none">
+            <img id="img-preview-src" src="" alt="">
+            <button class="img-remove-btn" onclick="removeImage()" title="Rimuovi immagine">✕</button>
+          </div>
+          <label class="img-upload-btn" id="img-upload-label">
+            📎 Scegli immagine
+            <input type="file" id="f-image-file" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+          </label>
+          <p class="form-hint">JPG, PNG, WebP — max 2MB. L'immagine viene salvata nell'app.</p>
+        </div>
       </div>
 
       <div class="form-group">
@@ -1505,6 +1576,7 @@ function drawRuler(w) {
 
 // ── RENDER TIMELINE ──
 function renderTimeline() {
+  checkAppLock();
   updateZoomInfo();
   const wrap=document.getElementById('rows-wrap');
   const w=wrap.clientWidth;
@@ -1522,6 +1594,14 @@ function renderTimeline() {
   const grouped={};
   state.categories.forEach(c=>{grouped[c.id]=[];});
   vis.forEach(e=>{if(grouped[e.category])grouped[e.category].push(e);});
+  // Ordina per data di inizio (più vecchia in alto)
+  Object.keys(grouped).forEach(catId=>{
+    grouped[catId].sort((a,b)=>{
+      const {start:sa}=entryBarRange(a);
+      const {start:sb}=entryBarRange(b);
+      return (sa??99999)-(sb??99999);
+    });
+  });
   if(vis.length===0){
     const es=document.createElement('div'); es.className='empty-state';
     es.innerHTML='<h2>✦ Nessuna voce</h2><p>Clicca "+ Voce" per iniziare<br>oppure modifica i filtri</p>';
@@ -1558,7 +1638,7 @@ function renderTimeline() {
     // Funzione per disegnare una singola entry in una riga DOM
     const drawEntry = (e, row) => {
       const {start, end} = entryBarRange(e);
-      const isU = e.certainty==='uncertain' || e.certainty==='approx';
+      const isU = (e.type==='fatto' ? (e.evCert||e.certainty) : e.certainty) === 'uncertain' || (e.type==='fatto' ? (e.evCert||e.certainty) : e.certainty) === 'approx';
       if (e.type==='fatto' || end===null) {
         if (start !== null) {
           const x = (start - tl.viewStart) * ppy;
@@ -1639,6 +1719,14 @@ function showPopup(id) {
   else if(e.type==='periodo'){addD('Inizio:',e.startY,e.startM,null);addD('Fine:',e.endY,e.endM,null);}
   else{addD('Data:',e.evY,e.evM,e.evD);}
   const descEl=document.getElementById('popup-desc');
+  // Immagine
+  const existingImg = document.getElementById('popup-img');
+  if (existingImg) existingImg.remove();
+  if (e.image) {
+    const img = document.createElement('img');
+    img.id = 'popup-img'; img.src = e.image; img.className = 'popup-image';
+    descEl.parentNode.insertBefore(img, descEl);
+  }
   descEl.textContent=e.desc||''; descEl.style.display=e.desc?'':'none';
   const privEl=document.getElementById('popup-private');
   if(e.privateNote){document.getElementById('popup-private-text').textContent=e.privateNote;privEl.style.display='';}
@@ -1686,6 +1774,7 @@ function clearForm() {
   ['f-name','p-birth-y','p-birth-d','p-power-y','p-power-d','p-resign-y','p-resign-d','p-death-y','p-death-d','per-start-y','per-end-y','ev-y','ev-d','f-desc','f-private','f-biblio'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['p-birth-m','p-power-m','p-resign-m','p-death-m','per-start-m','per-end-m','ev-m'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f-linked-tl').value='';
+  removeImage();
   setType('persona'); setCert('sure'); resetDateCerts();
 }
 function fillForm(e) {
@@ -1693,6 +1782,7 @@ function fillForm(e) {
   const sv=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
   sv('f-name',e.name); sv('f-desc',e.desc); sv('f-private',e.privateNote); sv('f-biblio',e.biblio);
   sv('f-category',e.category); sv('f-timeline',e.timeline||state.currentTL); sv('f-linked-tl',e.linkedTimeline||'');
+  setImagePreview(e.image||null);
   if(e.type==='persona'){
     sv('p-birth-y',e.birthY);sv('p-birth-m',e.birthM);sv('p-birth-d',e.birthD);
     sv('p-power-y',e.powerY);sv('p-power-m',e.powerM);sv('p-power-d',e.powerD);
@@ -1704,7 +1794,7 @@ function fillForm(e) {
     setDateCert('death', e.deathCert  || e.certainty || 'sure');
   }
   else if(e.type==='periodo'){sv('per-start-y',e.startY);sv('per-start-m',e.startM);sv('per-end-y',e.endY);sv('per-end-m',e.endM);}
-  else{sv('ev-y',e.evY);sv('ev-m',e.evM);sv('ev-d',e.evD);}
+  else{sv('ev-y',e.evY);sv('ev-m',e.evM);sv('ev-d',e.evD);setDateCert('ev',e.evCert||e.certainty||'sure');}
 }
 function setType(t) {
   currentType=t;
@@ -1717,7 +1807,7 @@ function setType(t) {
   document.querySelector('.form-box')?.classList.toggle('persona-mode',t==='persona');
 }
 // certezza per singola data (nascita/potere/morte)
-const _dateCerts = { birth:'sure', power:'sure', death:'sure' };
+const _dateCerts = { birth:'sure', power:'sure', death:'sure', ev:'sure' };
 function setDateCert(dateKey, c) {
   _dateCerts[dateKey] = c;
   ['sure','approx','uncertain'].forEach(x => {
@@ -1726,7 +1816,7 @@ function setDateCert(dateKey, c) {
   });
 }
 function resetDateCerts() {
-  ['birth','power','death'].forEach(k => setDateCert(k,'sure'));
+  ['birth','power','death','ev'].forEach(k => setDateCert(k,'sure'));
 }
 function setCert(c) {
   currentCert=c;
@@ -1742,7 +1832,7 @@ function saveEntry() {
   if(!cat){showToast('Seleziona una categoria!');return;}
   const gv=id=>{const el=document.getElementById(id);return el?(el.value||''):'';}
   const gn=id=>{const v=gv(id);return v!==''?parseFloat(v):null;}
-  let entry={id:editingId||('e_'+Date.now()),name,category:cat,type:currentType,timeline:tl,certainty:currentCert,desc:gv('f-desc'),privateNote:gv('f-private'),biblio:gv('f-biblio'),linkedTimeline:gv('f-linked-tl')||null};
+  let entry={id:editingId||('e_'+Date.now()),name,category:cat,type:currentType,timeline:tl,certainty:currentCert,desc:gv('f-desc'),privateNote:gv('f-private'),biblio:gv('f-biblio'),linkedTimeline:gv('f-linked-tl')||null,image:_currentImageData||null};
   if(currentType==='persona'){
     Object.assign(entry,{
       birthY:gn('p-birth-y'),birthM:gv('p-birth-m'),birthD:gn('p-birth-d'),birthCert:_dateCerts.birth,
@@ -1755,7 +1845,7 @@ function saveEntry() {
     entry.startY=gn('per-start-y');entry.startM=gv('per-start-m');entry.endY=gn('per-end-y');entry.endM=gv('per-end-m');
     if(!entry.startY||!entry.endY){showToast('Inserisci inizio e fine!');return;}
   } else {
-    entry.evY=gn('ev-y');entry.evM=gv('ev-m');entry.evD=gn('ev-d');
+    entry.evY=gn('ev-y');entry.evM=gv('ev-m');entry.evD=gn('ev-d');entry.evCert=_dateCerts.ev;
     if(!entry.evY){showToast("Inserisci l'anno!");return;}
   }
   if(editingId){const idx=state.entries.findIndex(x=>x.id===editingId);if(idx!==-1)state.entries[idx]=entry;}
@@ -1901,7 +1991,31 @@ rowsWrap.addEventListener('touchmove',e=>{
 },{passive:false});
 rowsWrap.addEventListener('touchend',()=>{save();touchSX=null;touch2Dist=null;});
 
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
+function toggleSidebar(){
+  const aside = document.getElementById('sidebar');
+  const tab   = document.getElementById('sidebar-pull-tab');
+  const tl    = document.querySelector('.timeline-area');
+  aside.classList.toggle('collapsed');
+  const collapsed = aside.classList.contains('collapsed');
+  if (tab) tab.style.left = collapsed ? '0' : 'var(--sidebar-w)';
+  if (tl)  tl.style.marginLeft = collapsed ? '0' : 'var(--sidebar-w)';
+  setTimeout(()=>renderTimeline(), 260);
+}
+function openSidebarAndFocus(){
+  const aside = document.getElementById('sidebar');
+  aside.classList.remove('collapsed');
+  const tab = document.getElementById('sidebar-pull-tab');
+  const tl  = document.querySelector('.timeline-area');
+  if (tab) tab.style.left = 'var(--sidebar-w)';
+  if (tl)  tl.style.marginLeft = 'var(--sidebar-w)';
+  setTimeout(()=>{ document.getElementById('new-cat-name')?.focus(); },300);
+}
+function checkAppLock() {
+  const lock = document.getElementById('app-lock');
+  if (!lock) return;
+  const hasData = state.categories.length > 0 || state.entries.length > 0;
+  lock.classList.toggle('visible', !hasData);
+}
 
 // ── EXPORT/IMPORT ──
 function exportData(){
@@ -2134,7 +2248,112 @@ function doImportMerge(){
   }
 }
 
-// ── TOAST ──
+// ── EXPORT MENU ──
+function toggleExportMenu() {
+  document.getElementById('export-menu').classList.toggle('open');
+}
+function closeExportMenu() {
+  document.getElementById('export-menu').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#export-menu') && !e.target.closest('.header-btn'))
+    closeExportMenu();
+});
+
+// ── IMAGE HANDLING ──
+let _currentImageData = null;
+function handleImageUpload(e) {
+  const file = e.target.files[0]; if (!file) return;
+  if (file.size > 2*1024*1024) { showToast('Immagine troppo grande (max 2MB)'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    _currentImageData = ev.target.result;
+    document.getElementById('img-preview-src').src = _currentImageData;
+    document.getElementById('img-preview').style.display = '';
+    document.getElementById('img-upload-label').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function removeImage() {
+  _currentImageData = null;
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('img-upload-label').style.display = '';
+  document.getElementById('f-image-file').value = '';
+}
+function setImagePreview(dataUrl) {
+  if (dataUrl) {
+    _currentImageData = dataUrl;
+    document.getElementById('img-preview-src').src = dataUrl;
+    document.getElementById('img-preview').style.display = '';
+    document.getElementById('img-upload-label').style.display = 'none';
+  } else {
+    removeImage();
+  }
+}
+
+// ── EXPORT IMAGE ──
+function exportImage() {
+  showToast('Preparazione immagine...');
+  const wrap = document.getElementById('timeline-canvas-wrap');
+  const ruler = document.querySelector('.ruler-wrap');
+  // Usa html2canvas se disponibile, altrimenti fallback SVG semplice
+  if (window.html2canvas) {
+    const container = document.querySelector('.timeline-area');
+    html2canvas(container, { backgroundColor:'#2c1810', scale:2, useCORS:true }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'chronos-timeline.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      showToast('Immagine salvata!');
+    }).catch(()=>showToast('Errore esportazione immagine'));
+  } else {
+    // Carica html2canvas dinamicamente
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => exportImage();
+    script.onerror = () => showToast('Errore: impossibile caricare html2canvas');
+    document.head.appendChild(script);
+  }
+}
+
+// ── EXPORT PDF ──
+function exportPDF() {
+  showToast('Preparazione PDF...');
+  const doExport = () => {
+    const container = document.querySelector('.timeline-area');
+    html2canvas(container, { backgroundColor:'#2c1810', scale:2, useCORS:true }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const ratio = Math.min(pdfW / canvas.width, pdfH / canvas.height);
+      const imgW = canvas.width * ratio;
+      const imgH = canvas.height * ratio;
+      const x = (pdfW - imgW) / 2;
+      const y = (pdfH - imgH) / 2;
+      pdf.addImage(imgData, 'PNG', x, y, imgW, imgH);
+      pdf.save('chronos-timeline.pdf');
+      showToast('PDF salvato!');
+    }).catch(()=>showToast('Errore esportazione PDF'));
+  };
+
+  const loadLib = (src, check, cb) => {
+    if (check()) { cb(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = cb;
+    s.onerror = () => showToast('Errore caricamento libreria PDF');
+    document.head.appendChild(s);
+  };
+
+  loadLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    () => !!window.html2canvas,
+    () => loadLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+      () => !!window.jspdf,
+      doExport
+    )
+  );
+}
 let toastTimer;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
 
@@ -2159,19 +2378,17 @@ function loadDemo() {
 
 window.addEventListener('resize',()=>renderTimeline());
 
-function init(){
+async function init(){
   populateMonthSelects();
-  // Mostra schermata login se Firebase configurato, altrimenti avvia locale
-  if (window._fb?.configured) {
-    document.getElementById('login-screen').classList.add('visible');
-    // _onAuthChange verrà chiamato automaticamente dall'observer Firebase
-  } else {
-    // Firebase non configurato: avvia subito in locale
-    document.getElementById('login-screen').classList.add('visible');
-    document.getElementById('login-note').textContent = 'Firebase non configurato. Usa "Continua senza account" per usare l\'app in modalità locale.';
-  }
-  // Carica comunque i dati locali in background per uso offline
-  load();
+  const hasData = await load();
+  if (!hasData) loadDemo();
+  renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
+  // Sidebar chiusa all'avvio
+  const aside = document.getElementById('sidebar');
+  aside.classList.add('collapsed');
+  const tl = document.querySelector('.timeline-area');
+  if (tl) tl.style.marginLeft = '0';
+  checkAppLock();
 }
 init();
 </script>
