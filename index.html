@@ -1850,8 +1850,55 @@ function saveEntry() {
   }
   if(editingId){const idx=state.entries.findIndex(x=>x.id===editingId);if(idx!==-1)state.entries[idx]=entry;}
   else state.entries.push(entry);
+
+  // ── Sincronizzazione timeline collegate ──
+  // Se la voce ha una linkedTimeline, aggiorna/crea la copia in quella timeline
+  if(entry.linkedTimeline) {
+    syncToLinkedTimeline(entry);
+  }
+  // Se questa voce esiste anche in altre timeline (stesso id), aggiorna i dati storici
+  syncAcrossTimelines(entry);
+
   closeForm(); save(); renderCategories(); renderTimeline(); updateFilterChips();
   showToast(editingId?'Voce aggiornata!':'Voce aggiunta!');
+}
+
+// Aggiorna la copia nella timeline di approfondimento collegata
+function syncToLinkedTimeline(entry) {
+  const linkedTL = state.timelines.find(t => t.id === entry.linkedTimeline);
+  if (!linkedTL) return;
+  // Cerca una copia nella timeline collegata (stesso id con suffisso _linked o stesso id)
+  const linkedId = entry.id + '_linked';
+  const existingIdx = state.entries.findIndex(e => e.id === linkedId);
+  const linkedEntry = {
+    ...entry,
+    id: linkedId,
+    timeline: entry.linkedTimeline,
+    linkedTimeline: null, // evita loop
+    privateNote: existingIdx !== -1 ? state.entries[existingIdx].privateNote : '',
+  };
+  if (existingIdx !== -1) {
+    state.entries[existingIdx] = linkedEntry;
+  } else {
+    state.entries.push(linkedEntry);
+  }
+}
+
+// Aggiorna i dati storici (non le note private) in tutte le timeline che hanno la stessa voce
+function syncAcrossTimelines(entry) {
+  const fieldsToSync = ['name','type','category','birthY','birthM','birthD','birthCert',
+    'powerY','powerM','powerD','powerCert','resignY','resignM','resignD',
+    'deathY','deathM','deathD','deathCert','startY','startM','endY','endM',
+    'evY','evM','evD','evCert','certainty','desc','biblio','image','linkedTimeline'];
+  state.entries.forEach((e, idx) => {
+    // Trova copie collegate (id_linked) o voci con stesso id base
+    const baseId = entry.id.replace('_linked','');
+    if (e.id === baseId + '_linked' && e.id !== entry.id) {
+      fieldsToSync.forEach(f => { if(entry[f] !== undefined) state.entries[idx][f] = entry[f]; });
+      state.entries[idx].timeline = e.timeline; // mantieni la timeline originale
+      state.entries[idx].privateNote = e.privateNote; // mantieni nota privata
+    }
+  });
 }
 
 // ── ZOOM/PAN ──
@@ -2052,10 +2099,21 @@ function readExcelFile(file){
       const wb   = XLSX.read(data, { type:'array' });
       const entries = [];
       let warnings = [];
+      const newTimelines = []; // timeline create da fogli Excel
 
       wb.SheetNames.forEach(sheetName => {
         // Salta il foglio Istruzioni
         if (sheetName === 'Istruzioni') return;
+
+        // Ogni foglio = una timeline
+        // Cerca se esiste già una timeline con quel nome
+        let tlObj = state.timelines.find(t => t.name.toLowerCase() === sheetName.toLowerCase());
+        if (!tlObj) {
+          tlObj = { id: 'tl_' + sheetName.toLowerCase().replace(/\s+/g,'_') + '_' + Date.now(), name: sheetName, desc:'', viewStart:1000, viewEnd:1900 };
+          newTimelines.push(tlObj);
+        }
+        const sheetTLId = tlObj.id;
+
         const ws = wb.Sheets[sheetName];
 
         // Leggi come array di array per gestire intestazioni su più righe
@@ -2123,7 +2181,7 @@ function readExcelFile(file){
           let entry = {
             id: stableId,
             name, type: finalType, category: catObj.id,
-            timeline: state.currentTL,
+            timeline: sheetTLId,
             certainty: cert, desc, privateNote: priv, biblio: bibl, linkedTimeline: null
           };
 
@@ -2162,7 +2220,7 @@ function readExcelFile(file){
         return;
       }
 
-      _importPending = { _isExcel:true, entries, warnings };
+      _importPending = { _isExcel:true, entries, warnings, newTimelines };
       const countEl = document.getElementById('xl-import-count');
       const warnEl  = document.getElementById('xl-import-warnings');
       if (countEl) countEl.textContent = entries.length;
@@ -2182,12 +2240,15 @@ function closeExcelModal(ev){
 }
 function doExcelMerge(){
   if(!_importPending||!_importPending._isExcel)return;
-  const {entries} = _importPending;
+  const {entries, newTimelines} = _importPending;
+  // Aggiungi nuove timeline
+  if (newTimelines) newTimelines.forEach(tl => {
+    if (!state.timelines.find(t => t.id === tl.id)) state.timelines.push(tl);
+  });
   let added=0, updated=0;
   entries.forEach(e=>{
     const idx = state.entries.findIndex(x=>x.id===e.id);
     if(idx !== -1){
-      // aggiorna la voce esistente mantenendo la nota privata
       state.entries[idx] = { ...e, privateNote: state.entries[idx].privateNote || e.privateNote };
       updated++;
     } else {
@@ -2197,7 +2258,8 @@ function doExcelMerge(){
   document.getElementById('import-excel-overlay').classList.remove('open');
   _importPending=null;
   save(); renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
-  showToast(`${added} voci aggiunte, ${updated} aggiornate`);
+  const tlMsg = newTimelines?.length ? ` · ${newTimelines.length} timeline create` : '';
+  showToast(`${added} voci aggiunte, ${updated} aggiornate${tlMsg}`);
 }
 function doExcelOverwrite(){
   if(!_importPending||!_importPending._isExcel)return;
