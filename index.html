@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chronos — Timeline Storica</title>
+<title>Chronos — Timeline Storica v03</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -47,31 +47,43 @@
   .header-btn:hover { background:var(--gold); color:var(--ink); }
   .header-btn.accent { background:var(--gold); color:var(--ink); }
 
-  /* TIMELINE TABS */
-  .tl-selector-bar { background:#1a0c08; border-bottom:2px solid var(--gold); display:flex; align-items:center; padding:0 10px; gap:4px; min-height:34px; flex-shrink:0; overflow-x:auto; z-index:90; }
-  .tl-selector-bar::-webkit-scrollbar { height:3px; }
-  .tl-selector-bar::-webkit-scrollbar-thumb { background:var(--gold); }
-  .tl-tab { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; color:#ffffff55; padding:5px 12px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:all .15s; display:flex; align-items:center; gap:5px; }
-  .tl-tab:hover { color:var(--gold-light); }
-  .tl-tab.active { color:var(--gold-light); border-bottom-color:var(--gold); }
-  .tl-tab-del { color:#ffffff33; font-size:0.65rem; cursor:pointer; padding:0 2px; }
-  .tl-tab-del:hover { color:var(--red-wax); }
-  .tl-add-btn { color:var(--gold); font-size:1rem; cursor:pointer; padding:4px 8px; opacity:.7; transition:opacity .15s; flex-shrink:0; }
-  .tl-add-btn:hover { opacity:1; }
+  /* TIMELINE DROPDOWN */
+  .tl-selector-bar { background:#1a0c08; border-bottom:2px solid var(--gold); display:flex; align-items:center; padding:0 10px; gap:6px; min-height:36px; flex-shrink:0; z-index:90; position:relative; }
+  .tl-current-btn { font-family:'Cinzel',serif; font-size:0.62rem; letter-spacing:1px; color:var(--gold-light); background:transparent; border:1px solid var(--gold); padding:4px 10px; cursor:pointer; border-radius:2px; display:flex; align-items:center; gap:6px; transition:background .15s; white-space:nowrap; }
+  .tl-current-btn:hover { background:#ffffff15; }
+  .tl-current-btn .arrow { font-size:0.5rem; opacity:.7; transition:transform .2s; }
+  .tl-current-btn.open .arrow { transform:rotate(180deg); }
+  .tl-dropdown { position:absolute; top:100%; left:10px; min-width:200px; background:var(--ink); border:1px solid var(--gold); border-top:none; border-radius:0 0 4px 4px; z-index:200; display:none; box-shadow:0 6px 20px rgba(0,0,0,0.5); }
+  .tl-dropdown.open { display:block; }
+  .tl-dropdown-item { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; color:#ffffff88; padding:8px 12px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; transition:background .15s; border-bottom:1px solid #ffffff11; }
+  .tl-dropdown-item:last-child { border-bottom:none; }
+  .tl-dropdown-item:hover { background:#ffffff15; color:var(--gold-light); }
+  .tl-dropdown-item.active { color:var(--gold-light); }
+  .tl-dropdown-item .tl-item-del { color:#ffffff33; font-size:0.65rem; cursor:pointer; padding:2px 4px; border-radius:2px; }
+  .tl-dropdown-item .tl-item-del:hover { color:var(--red-wax); background:#ff000022; }
+  .tl-dropdown-add { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; color:var(--gold); padding:8px 12px; cursor:pointer; display:flex; align-items:center; gap:6px; background:#ffffff08; transition:background .15s; }
+  .tl-dropdown-add:hover { background:#ffffff18; }
 
-  /* QUICK FILTERS */
-  .filters-bar { background:var(--parchment-dark); border-bottom:1px solid var(--gold); display:flex; align-items:center; padding:3px 10px; gap:5px; flex-shrink:0; overflow-x:auto; min-height:34px; }
-  .filters-bar::-webkit-scrollbar { height:3px; }
-  .filter-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:1.5px; color:var(--ink-light); white-space:nowrap; flex-shrink:0; }
-  .filter-chip { display:flex; align-items:center; gap:4px; padding:2px 9px; border-radius:20px; border:1px solid currentColor; font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer; white-space:nowrap; transition:all .15s; flex-shrink:0; }
+  /* FILTERS DROPDOWN */
+  .filters-bar { background:var(--parchment-dark); border-bottom:1px solid var(--gold); display:flex; align-items:center; padding:0 10px; gap:6px; flex-shrink:0; min-height:36px; position:relative; z-index:89; }
+  .filter-toggle-btn { font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; color:var(--ink); background:var(--gold); border:none; padding:4px 10px; cursor:pointer; border-radius:2px; display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  .filter-toggle-btn .arrow { font-size:0.5rem; transition:transform .2s; }
+  .filter-toggle-btn.open .arrow { transform:rotate(180deg); }
+  .filter-active-summary { font-family:'EB Garamond',serif; font-size:0.78rem; color:var(--ink-light); font-style:italic; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .filters-dropdown { position:absolute; top:100%; left:0; right:0; background:var(--parchment); border:1px solid var(--gold); border-top:none; z-index:200; display:none; box-shadow:0 6px 20px rgba(0,0,0,0.3); padding:10px 12px; }
+  .filters-dropdown.open { display:block; }
+  .filter-row { display:flex; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+  .filter-row:last-child { margin-bottom:0; }
+  .filter-label { font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:1.5px; color:var(--ink-light); white-space:nowrap; flex-shrink:0; min-width:50px; }
+  .filter-chip { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; border:1px solid currentColor; font-family:'Cinzel',serif; font-size:0.55rem; letter-spacing:1px; cursor:pointer; white-space:nowrap; transition:all .15s; }
   .filter-chip.active { opacity:1; }
-  .filter-chip:not(.active) { opacity:0.45; }
+  .filter-chip:not(.active) { opacity:0.4; }
   .filter-chip:hover { opacity:1; }
   .filter-sep { width:1px; height:18px; background:var(--gold); opacity:.3; flex-shrink:0; }
-  .filter-period-wrap { display:flex; align-items:center; gap:3px; flex-shrink:0; }
-  .filter-period-input { width:58px; background:#fff; border:1px solid var(--parchment-dark); border-radius:3px; padding:2px 5px; font-family:'EB Garamond',serif; font-size:0.78rem; color:var(--ink); }
+  .filter-period-wrap { display:flex; align-items:center; gap:4px; }
+  .filter-period-input { width:64px; background:#fff; border:1px solid var(--parchment-dark); border-radius:3px; padding:3px 6px; font-family:'EB Garamond',serif; font-size:0.82rem; color:var(--ink); }
   .filter-period-input:focus { outline:none; border-color:var(--gold); }
-  .filter-go { background:var(--gold); border:none; color:var(--ink); font-family:'Cinzel',serif; font-size:0.52rem; padding:3px 7px; cursor:pointer; border-radius:3px; letter-spacing:1px; }
+  .filter-go { background:var(--gold); border:none; color:var(--ink); font-family:'Cinzel',serif; font-size:0.52rem; padding:4px 8px; cursor:pointer; border-radius:3px; letter-spacing:1px; }
 
   /* MAIN LAYOUT */
   .app-body { display:flex; flex:1; overflow:hidden; }
@@ -516,23 +528,37 @@
 </div>
 
 <div class="tl-selector-bar" id="tl-selector-bar">
-  <span class="tl-add-btn" onclick="openNewTL()" title="Nuova timeline">＋</span>
+  <button class="tl-current-btn" id="tl-current-btn" onclick="toggleTLDropdown()">
+    <span id="tl-current-name">Generale</span>
+    <span class="arrow">▼</span>
+  </button>
+  <div class="tl-dropdown" id="tl-dropdown"></div>
 </div>
 
 <div class="filters-bar" id="filters-bar">
-  <span class="filter-label">FILTRI:</span>
-  <div class="filter-sep"></div>
-  <span class="filter-label">TIPO:</span>
-  <div class="filter-chip active" id="ftype-persona" style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('persona')">👤 Personaggi</div>
-  <div class="filter-chip active" id="ftype-periodo" style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('periodo')">⟷ Periodi</div>
-  <div class="filter-chip active" id="ftype-fatto"   style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('fatto')">◆ Fatti</div>
-  <div class="filter-sep"></div>
-  <span class="filter-label">PERIODO:</span>
-  <div class="filter-period-wrap">
-    <input class="filter-period-input" id="fp-from" type="number" placeholder="dal">
-    <input class="filter-period-input" id="fp-to"   type="number" placeholder="al">
-    <button class="filter-go" onclick="applyPeriodFilter()">OK</button>
-    <button class="filter-go" style="background:var(--ink-light);color:#fff" onclick="clearPeriodFilter()">✕</button>
+  <button class="filter-toggle-btn" id="filter-toggle-btn" onclick="toggleFiltersDropdown()">
+    ☰ Filtri <span class="arrow">▼</span>
+  </button>
+  <span class="filter-active-summary" id="filter-active-summary"></span>
+  <div class="filters-dropdown" id="filters-dropdown">
+    <div class="filter-row">
+      <span class="filter-label">TIPO:</span>
+      <div class="filter-chip active" id="ftype-persona" style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('persona')">👤 Personaggi</div>
+      <div class="filter-chip active" id="ftype-periodo" style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('periodo')">⟷ Periodi</div>
+      <div class="filter-chip active" id="ftype-fatto"   style="color:#5c3d2e;border-color:#5c3d2e" onclick="toggleTypeFilter('fatto')">◆ Fatti</div>
+    </div>
+    <div class="filter-row" id="filter-cats-row">
+      <span class="filter-label">CAT:</span>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">PERIODO:</span>
+      <div class="filter-period-wrap">
+        <input class="filter-period-input" id="fp-from" type="number" placeholder="dal">
+        <input class="filter-period-input" id="fp-to"   type="number" placeholder="al">
+        <button class="filter-go" onclick="applyPeriodFilter()">OK</button>
+        <button class="filter-go" style="background:var(--ink-light);color:#fff" onclick="clearPeriodFilter()">✕</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1192,24 +1218,58 @@ function populateMonthSelects() {
   });
 }
 
-// ── TIMELINE TABS ──
+// ── TIMELINE DROPDOWN ──
+function toggleTLDropdown() {
+  const btn = document.getElementById('tl-current-btn');
+  const dd  = document.getElementById('tl-dropdown');
+  const isOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) { btn.classList.add('open'); dd.classList.add('open'); }
+}
+function toggleFiltersDropdown() {
+  const btn = document.getElementById('filter-toggle-btn');
+  const dd  = document.getElementById('filters-dropdown');
+  const isOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) { btn.classList.add('open'); dd.classList.add('open'); }
+}
+function closeAllDropdowns() {
+  document.getElementById('tl-current-btn')?.classList.remove('open');
+  document.getElementById('tl-dropdown')?.classList.remove('open');
+  document.getElementById('filter-toggle-btn')?.classList.remove('open');
+  document.getElementById('filters-dropdown')?.classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tl-selector-bar') && !e.target.closest('.filters-bar'))
+    closeAllDropdowns();
+});
+
 function renderTLTabs() {
-  const bar = document.getElementById('tl-selector-bar');
-  bar.querySelectorAll('.tl-tab').forEach(el=>el.remove());
-  const addBtn = bar.querySelector('.tl-add-btn');
+  const dd = document.getElementById('tl-dropdown');
+  dd.innerHTML = '';
   state.timelines.forEach(tl => {
-    const tab = document.createElement('div');
-    tab.className = 'tl-tab'+(tl.id===state.currentTL?' active':'');
-    tab.innerHTML = tl.name;
+    const item = document.createElement('div');
+    item.className = 'tl-dropdown-item' + (tl.id === state.currentTL ? ' active' : '');
+    item.innerHTML = `<span>${tl.name}</span>`;
     if (tl.id !== 'generale') {
       const del = document.createElement('span');
-      del.className='tl-tab-del'; del.textContent='✕'; del.title='Elimina timeline';
+      del.className = 'tl-item-del'; del.textContent = '✕';
       del.onclick = e => { e.stopPropagation(); deleteTL(tl.id); };
-      tab.appendChild(del);
+      item.appendChild(del);
     }
-    tab.addEventListener('click', ()=>switchTL(tl.id));
-    bar.insertBefore(tab, addBtn);
+    item.addEventListener('click', () => { switchTL(tl.id); closeAllDropdowns(); });
+    dd.appendChild(item);
   });
+  // Pulsante nuova timeline
+  const addItem = document.createElement('div');
+  addItem.className = 'tl-dropdown-add';
+  addItem.innerHTML = '＋ Nuova timeline';
+  addItem.onclick = () => { closeAllDropdowns(); openNewTL(); };
+  dd.appendChild(addItem);
+  // Aggiorna nome timeline corrente
+  const cur = curTL();
+  const nameEl = document.getElementById('tl-current-name');
+  if (nameEl) nameEl.textContent = cur?.name || 'Generale';
 }
 function switchTL(id) {
   state.currentTL=id; save();
@@ -1333,24 +1393,39 @@ function confirmMovecat() {
 
 // ── QUICK FILTERS ──
 function updateFilterChips() {
-  const bar=document.getElementById('filters-bar');
-  bar.querySelectorAll('.cat-chip').forEach(el=>el.remove());
-  const sep=bar.querySelector('.filter-sep');
-  const hidden=getHiddenSet(state.currentTL);
-  state.categories.forEach(cat=>{
-    const chip=document.createElement('div');
-    const active=!hidden.has(cat.id);
-    chip.className='filter-chip cat-chip'+(active?' active':'');
-    chip.style.color=cat.color; chip.style.borderColor=cat.color;
-    chip.style.background=active?cat.color+'22':'transparent';
-    chip.textContent=cat.name;
-    chip.onclick=()=>toggleCat(cat.id,{stopPropagation:()=>{}});
-    bar.insertBefore(chip,sep);
+  // Aggiorna chips categorie dentro il dropdown filtri
+  const catsRow = document.getElementById('filter-cats-row');
+  if (catsRow) {
+    catsRow.innerHTML = '<span class="filter-label">CAT:</span>';
+    const hidden = getHiddenSet(state.currentTL);
+    state.categories.forEach(cat => {
+      const chip = document.createElement('div');
+      const active = !hidden.has(cat.id);
+      chip.className = 'filter-chip' + (active ? ' active' : '');
+      chip.style.color = cat.color; chip.style.borderColor = cat.color;
+      chip.style.background = active ? cat.color+'22' : 'transparent';
+      chip.textContent = cat.name;
+      chip.onclick = () => toggleCat(cat.id, {stopPropagation:()=>{}});
+      catsRow.appendChild(chip);
+    });
+  }
+  // Aggiorna chips tipo
+  ['persona','periodo','fatto'].forEach(t => {
+    const el = document.getElementById('ftype-'+t);
+    if (el) el.classList.toggle('active', !!state.activeTypeFilters[t]);
   });
-  ['persona','periodo','fatto'].forEach(t=>{
-    const el=document.getElementById('ftype-'+t);
-    if(el)el.classList.toggle('active',!!state.activeTypeFilters[t]);
-  });
+  // Aggiorna sommario filtri attivi
+  updateFilterSummary();
+}
+function updateFilterSummary() {
+  const hidden = getHiddenSet(state.currentTL);
+  const parts = [];
+  const offTypes = Object.entries(state.activeTypeFilters).filter(([,v])=>!v).map(([k])=>k);
+  if (offTypes.length) parts.push(offTypes.join(', ') + ' nascosti');
+  if (hidden.size) parts.push(hidden.size + ' categorie nascoste');
+  if (state.periodFilter) parts.push(`${state.periodFilter.from}–${state.periodFilter.to}`);
+  const el = document.getElementById('filter-active-summary');
+  if (el) el.textContent = parts.length ? parts.join(' · ') : 'Tutti visibili';
 }
 function toggleTypeFilter(type) {
   state.activeTypeFilters[type]=!state.activeTypeFilters[type];
@@ -1460,46 +1535,74 @@ function renderTimeline() {
     hdr.style.borderLeft=`4px solid ${catObj.color}`;
     hdr.innerHTML=`<span style="background:${catObj.color};width:8px;height:8px;border-radius:50%;display:inline-block"></span> ${catObj.name.toUpperCase()} <span style="color:#ffffff55;font-size:.55rem;margin-left:6px">(${entries.length})</span>`;
     tlWrap.appendChild(hdr); totalH+=28;
-    entries.forEach(e=>{
-      const row=document.createElement('div'); row.className='tl-row'; row.style.width=w+'px';
-      const{start,end}=entryBarRange(e);
-      const isU=e.certainty==='uncertain'||e.certainty==='approx';
-      if(e.type==='fatto'||end===null){
-        if(start!==null){
-          const x=(start-tl.viewStart)*ppy;
-          const pt=document.createElement('div'); pt.className='tl-point'+(isU?' uncertain':'');
-          pt.style.left=x+'px'; pt.style.background=catObj.color; pt.title=e.name;
-          pt.onclick=()=>showPopup(e.id); row.appendChild(pt);
-          const lbl=document.createElement('div');
-          lbl.style.cssText=`position:absolute;left:${x+8}px;top:50%;transform:translateY(-50%);font-size:.7rem;color:${catObj.color};white-space:nowrap;pointer-events:none;font-family:'EB Garamond',serif;font-weight:500`;
-          lbl.textContent=e.name; row.appendChild(lbl);
+    // ── Compattazione righe per tutti i tipi ──
+    // Algoritmo greedy: assegna ogni voce alla prima riga in cui non si sovrappone
+    const righe = [];
+    entries.forEach(e => {
+      const {start, end} = entryBarRange(e);
+      const eStart = start ?? end ?? 0;
+      const eEnd   = end   ?? start ?? 0;
+      let placed = false;
+      for (const riga of righe) {
+        const overlap = riga.some(r => {
+          const {start:rs, end:re} = entryBarRange(r);
+          const rStart = rs ?? re ?? 0;
+          const rEnd   = re ?? rs ?? 0;
+          return eStart < rEnd + 2 && eEnd > rStart - 2;
+        });
+        if (!overlap) { riga.push(e); placed = true; break; }
+      }
+      if (!placed) righe.push([e]);
+    });
+
+    // Funzione per disegnare una singola entry in una riga DOM
+    const drawEntry = (e, row) => {
+      const {start, end} = entryBarRange(e);
+      const isU = e.certainty==='uncertain' || e.certainty==='approx';
+      if (e.type==='fatto' || end===null) {
+        if (start !== null) {
+          const x = (start - tl.viewStart) * ppy;
+          const pt = document.createElement('div');
+          pt.className = 'tl-point' + (isU ? ' uncertain' : '');
+          pt.style.left = x+'px'; pt.style.background = catObj.color; pt.title = e.name;
+          pt.onclick = () => showPopup(e.id); row.appendChild(pt);
+          const lbl = document.createElement('div');
+          lbl.style.cssText = `position:absolute;left:${x+8}px;top:50%;transform:translateY(-50%);font-size:.7rem;color:${catObj.color};white-space:nowrap;pointer-events:none;font-family:'EB Garamond',serif;font-weight:500`;
+          lbl.textContent = e.name; row.appendChild(lbl);
         }
       } else {
-        const x1=Math.max(0,(start-tl.viewStart)*ppy);
-        const x2=Math.min(w,(end-tl.viewStart)*ppy);
-        const bw=Math.max(4,x2-x1);
-        const bar=document.createElement('div'); bar.className='tl-bar'+(isU?' uncertain':'');
-        bar.style.left=x1+'px'; bar.style.width=bw+'px'; bar.style.background=catObj.color;
-        bar.onclick=()=>showPopup(e.id);
-        if(e.type==='persona'){
-          [{y:e.birthY,m:e.birthM,color:'#ffffff88',title:'Nascita'},
-           {y:e.resignY,m:e.resignM,color:'#ffff0099',title:'Rinuncia'},
-           {y:e.deathY,m:e.deathM,color:'#ff000099',title:'Morte'}
-          ].forEach(mk=>{
-            if(!mk.y)return;
-            const mx=(dateToDecimal(mk.y,mk.m,null)-start)*ppy;
-            if(mx<0||mx>bw)return;
-            const m=document.createElement('div'); m.className='tl-marker';
-            m.style.left=mx+'px'; m.style.background=mk.color; m.title=mk.title;
+        const x1 = Math.max(0, (start - tl.viewStart) * ppy);
+        const x2 = Math.min(w, (end   - tl.viewStart) * ppy);
+        const bw = Math.max(4, x2 - x1);
+        const bar = document.createElement('div');
+        bar.className = 'tl-bar' + (isU ? ' uncertain' : '');
+        bar.style.left = x1+'px'; bar.style.width = bw+'px'; bar.style.background = catObj.color;
+        bar.onclick = () => showPopup(e.id);
+        if (e.type === 'persona') {
+          [{y:e.birthY, m:e.birthM, color:'#ffffff88', title:'Nascita'},
+           {y:e.resignY,m:e.resignM,color:'#ffff0099', title:'Rinuncia'},
+           {y:e.deathY, m:e.deathM, color:'#ff000099', title:'Morte'}
+          ].forEach(mk => {
+            if (!mk.y) return;
+            const mx = (dateToDecimal(mk.y, mk.m, null) - start) * ppy;
+            if (mx < 0 || mx > bw) return;
+            const m = document.createElement('div'); m.className = 'tl-marker';
+            m.style.left = mx+'px'; m.style.background = mk.color; m.title = mk.title;
             bar.appendChild(m);
           });
         }
-        if(e.privateNote){const lk=document.createElement('div');lk.className='tl-lock';lk.textContent='🔒';bar.appendChild(lk);}
-        const lbl=document.createElement('div'); lbl.className='tl-bar-label';
-        lbl.textContent=bw>30?e.name:''; bar.appendChild(lbl);
+        if (e.privateNote) { const lk=document.createElement('div');lk.className='tl-lock';lk.textContent='🔒';bar.appendChild(lk); }
+        const lbl = document.createElement('div'); lbl.className = 'tl-bar-label';
+        lbl.textContent = bw > 30 ? e.name : ''; bar.appendChild(lbl);
         row.appendChild(bar);
       }
-      tlWrap.appendChild(row); totalH+=44;
+    };
+
+    // Disegna tutte le righe compattate
+    righe.forEach(riga => {
+      const row = document.createElement('div'); row.className = 'tl-row'; row.style.width = w+'px';
+      riga.forEach(e => drawEntry(e, row));
+      tlWrap.appendChild(row); totalH += 44;
     });
   });
   tlWrap.style.height=(totalH+40)+'px';
@@ -1837,70 +1940,101 @@ function readExcelFile(file){
       let warnings = [];
 
       wb.SheetNames.forEach(sheetName => {
-        const ws   = wb.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
-        if(!rows.length) return;
+        // Salta il foglio Istruzioni
+        if (sheetName === 'Istruzioni') return;
+        const ws = wb.Sheets[sheetName];
 
-        rows.forEach((row, idx) => {
-          // Normalizza chiavi (rimuovi spazi, lowercase)
+        // Leggi come array di array per gestire intestazioni su più righe
+        const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+        if (!raw.length) return;
+
+        // Trova la riga delle intestazioni vere: quella che contiene "Nome" o "nome"
+        let headerRowIdx = 0;
+        for (let i = 0; i < Math.min(6, raw.length); i++) {
+          const rowLow = raw[i].map(c => String(c).toLowerCase().trim());
+          if (rowLow.includes('nome') || rowLow.includes('name')) { headerRowIdx = i; break; }
+        }
+        const headers = raw[headerRowIdx].map(c => String(c).trim()
+          .toLowerCase()
+          .replace(/\s+/g,'_')
+          .replace(/[*\/]/g,'')
+          .replace(/\./g,'')
+        );
+
+        // Righe dati: tutto dopo la riga intestazioni
+        const dataRows = raw.slice(headerRowIdx + 1);
+
+        dataRows.forEach((rowArr, idx) => {
+          // Mappa array → oggetto con chiavi normalizzate
           const r = {};
-          Object.keys(row).forEach(k => { r[k.trim().toLowerCase().replace(/\s+/g,'_').replace(/[*]/g,'')] = String(row[k]).trim(); });
+          headers.forEach((h, i) => { r[h] = String(rowArr[i] ?? '').trim(); });
 
           const name = r['nome'] || r['name'] || '';
-          const type = (r['tipo'] || r['type'] || 'periodo').toLowerCase();
+          const type = (r['tipo'] || r['type'] || '').toLowerCase();
           const cat  = r['categoria'] || r['category'] || 'Battaglie ed eventi';
-          if(!name || name.startsWith('Es.') || name.startsWith('Compila')) return; // salta righe di esempio/istruzione
 
-          // Trova categoria esistente per nome (case-insensitive) o crea nuova
+          // Salta righe vuote, di esempio o di istruzione
+          if (!name || name.startsWith('Es.') || name.startsWith('Compila') || name.startsWith('—')) return;
+          // Salta righe senza tipo valido (es. riga gruppi rimasta)
+          if (type && !['persona','periodo','fatto'].includes(type)) return;
+
           let catObj = state.categories.find(c => c.name.toLowerCase() === cat.toLowerCase());
-          if(!catObj){
-            // crea categoria al volo con colore casuale
+          if (!catObj) {
             const colors = ['#4a6fa5','#e07b39','#5b8c5a','#9b59b6','#c0392b','#16a085'];
             catObj = { id:'cat_'+Date.now()+'_'+Math.random().toString(36).slice(2,6), name:cat, color:colors[state.categories.length % colors.length] };
             state.categories.push(catObj);
           }
 
-          const cert = r['certezza_date'] || r['certezza'] || 'sure';
+          const cert = r['certezza'] || r['certezza_date'] || 'sure';
           const desc = r['descrizione'] || r['description'] || '';
           const priv = r['nota_privata'] || r['private'] || '';
-          const bibl = r['riferimento_bib.'] || r['riferimento_bibliografico'] || r['biblio'] || '';
+          const bibl = r['riferimento_bib'] || r['riferimento_bibliografico'] || r['biblio'] || '';
 
-          const gn = key => { const v=r[key]; return (v!==undefined&&v!=='')?parseFloat(v):null; };
-          const gs = key => { const v=r[key]; return (v!==undefined&&v!=='')?String(parseInt(v)):null; };
+          const gn = key => { const v=r[key]; if(v===undefined||v==='')return null; const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?null:n; };
+          const gs = key => { const v=r[key]; if(v===undefined||v==='')return null; const n=parseInt(String(v)); return isNaN(n)?null:String(n); };
+
+          // Determina tipo: se manca usa euristica dai campi presenti
+          let finalType = type;
+          if (!finalType || finalType === '') {
+            // foglio Personaggi non ha colonna Tipo: usa euristica
+            if (r['anno_potere'] !== undefined || r['anno_nascita'] !== undefined) finalType = 'persona';
+            else if (r['anno_fine'] !== undefined) finalType = 'periodo';
+            else finalType = 'fatto';
+          }
+
+          // ID stabile basato su nome+categoria+anno: stessa voce = stesso ID ogni importazione
+          const stableKey = (name + '|' + cat + '|' + (r['anno_potere']||r['anno_nascita']||r['anno_inizio']||r['anno_evento']||'')).toLowerCase().replace(/\s+/g,'_');
+          const stableId = 'xl_' + stableKey.split('').reduce((h,c)=>(Math.imul(31,h)+c.charCodeAt(0))|0,0).toString(36).replace('-','n');
 
           let entry = {
-            id: 'xl_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),
-            name, type, category: catObj.id,
+            id: stableId,
+            name, type: finalType, category: catObj.id,
             timeline: state.currentTL,
             certainty: cert, desc, privateNote: priv, biblio: bibl, linkedTimeline: null
           };
 
-          if(type === 'persona'){
+          if (finalType === 'persona') {
             Object.assign(entry, {
-              birthY:  gn('anno_nascita'),   birthM:  gs('mese_nascita'),   birthD:  gn('giorno_nascita'),
-              powerY:  gn('anno_potere'),    powerM:  gs('mese_potere'),    powerD:  null,
-              resignY: gn('anno_rinuncia'),  resignM: null,                 resignD: null,
-              deathY:  gn('anno_morte'),     deathM:  gs('mese_morte'),     deathD:  null,
+              birthY: gn('anno_nascita'),  birthM: gs('mese_nascita'),  birthD: gn('giorno_nascita'), birthCert: r['certezza_nascita'] || cert,
+              powerY: gn('anno_potere'),   powerM: gs('mese_potere'),   powerD: null,                 powerCert: r['certezza_potere']  || cert,
+              resignY:gn('anno_rinuncia'), resignM:gs('mese_rinuncia'), resignD:null,
+              deathY: gn('anno_morte'),    deathM: gs('mese_morte'),    deathD: gn('giorno_morte'),   deathCert: r['certezza_morte']   || cert,
             });
-            if(!entry.birthY && !entry.powerY){
-              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno nascita o Anno potere — riga saltata`);
+            if (!entry.birthY && !entry.powerY) {
+              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno nascita o Anno potere — saltata`);
               return;
             }
-          } else if(type === 'periodo'){
-            entry.startY = gn('anno_inizio') || gn('anno_inizio_*');
-            entry.startM = gs('mese_inizio');
-            entry.endY   = gn('anno_fine');
-            entry.endM   = gs('mese_fine');
-            if(!entry.startY || !entry.endY){
-              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno inizio o Anno fine — riga saltata`);
+          } else if (finalType === 'periodo') {
+            entry.startY = gn('anno_inizio'); entry.startM = gs('mese_inizio'); entry.startD = gn('giorno_inizio');
+            entry.endY   = gn('anno_fine');   entry.endM   = gs('mese_fine');
+            if (!entry.startY || !entry.endY) {
+              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno inizio o Anno fine — saltata`);
               return;
             }
-          } else { // fatto
-            entry.evY = gn('anno_evento');
-            entry.evM = gs('mese_evento') || gs('mese_inizio');
-            entry.evD = null;
-            if(!entry.evY){
-              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno evento — riga saltata`);
+          } else {
+            entry.evY = gn('anno_evento'); entry.evM = gs('mese_evento') || gs('mese_inizio'); entry.evD = null;
+            if (!entry.evY) {
+              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno evento — saltata`);
               return;
             }
           }
@@ -1908,24 +2042,20 @@ function readExcelFile(file){
         });
       });
 
-      if(entries.length === 0){
+      if (entries.length === 0) {
         showToast('Nessuna voce trovata nel file Excel. Controlla le intestazioni.');
-        if(warnings.length) console.warn('Avvisi importazione:\n'+warnings.join('\n'));
+        if (warnings.length) console.warn('Avvisi:\n'+warnings.join('\n'));
         return;
       }
 
-      // Mostra anteprima con modal
       _importPending = { _isExcel:true, entries, warnings };
       const countEl = document.getElementById('xl-import-count');
       const warnEl  = document.getElementById('xl-import-warnings');
-      if(countEl) countEl.textContent = entries.length;
-      if(warnEl){
-        warnEl.style.display = warnings.length ? '' : 'none';
-        warnEl.textContent   = warnings.length ? `⚠ ${warnings.length} riga/e saltata/e (vedi console per dettagli)` : '';
-      }
+      if (countEl) countEl.textContent = entries.length;
+      if (warnEl) { warnEl.style.display = warnings.length ? '' : 'none'; warnEl.textContent = warnings.length ? `⚠ ${warnings.length} riga/e saltata/e` : ''; }
       document.getElementById('import-excel-overlay').classList.add('open');
 
-    } catch(err){
+    } catch(err) {
       console.error(err);
       showToast('Errore nella lettura del file Excel');
     }
@@ -1939,15 +2069,21 @@ function closeExcelModal(ev){
 function doExcelMerge(){
   if(!_importPending||!_importPending._isExcel)return;
   const {entries} = _importPending;
-  let added=0, skipped=0;
+  let added=0, updated=0;
   entries.forEach(e=>{
-    if(state.entries.find(x=>x.id===e.id)){ skipped++; }
-    else { state.entries.push(e); added++; }
+    const idx = state.entries.findIndex(x=>x.id===e.id);
+    if(idx !== -1){
+      // aggiorna la voce esistente mantenendo la nota privata
+      state.entries[idx] = { ...e, privateNote: state.entries[idx].privateNote || e.privateNote };
+      updated++;
+    } else {
+      state.entries.push(e); added++;
+    }
   });
   document.getElementById('import-excel-overlay').classList.remove('open');
   _importPending=null;
   save(); renderTLTabs(); renderCategories(); renderTimeline(); updateFilterChips();
-  showToast(`Excel importato: ${added} voci aggiunte!`);
+  showToast(`${added} voci aggiunte, ${updated} aggiornate`);
 }
 function doExcelOverwrite(){
   if(!_importPending||!_importPending._isExcel)return;
