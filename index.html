@@ -195,11 +195,15 @@
   .popup-goto { background:var(--parchment-dark); border:1px solid var(--gold); color:var(--ink); font-family:'Cinzel',serif; font-size:0.58rem; letter-spacing:1px; padding:5px 12px; border-radius:2px; cursor:pointer; margin-top:6px; transition:background .15s; display:block; width:100%; text-align:center; }
   .popup-goto:hover { background:var(--gold); }
   .popup-actions { display:flex; gap:8px; margin-top:12px; border-top:1px solid var(--parchment-dark); padding-top:10px; }
-  .btn-edit,.btn-del { flex:1; padding:7px; border:none; border-radius:2px; font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; cursor:pointer; transition:filter .15s; }
+  .btn-edit,.btn-del,.btn-copy { flex:1; padding:7px; border:none; border-radius:2px; font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:1px; cursor:pointer; transition:filter .15s; }
   .btn-edit { background:var(--gold); color:var(--ink); }
   .btn-edit:hover { filter:brightness(1.1); }
+  .btn-copy { background:#1a3a5c; color:#e8d9b8; }
+  .btn-copy:hover { filter:brightness(1.2); }
   .btn-del  { background:var(--red-wax); color:#fff; }
   .btn-del:hover { filter:brightness(1.2); }
+  /* Badge categoria secondaria sulla barra */
+  .tl-bar-cat2 { position:absolute; top:2px; right:20px; width:8px; height:8px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.8); pointer-events:none; }
 
   /* FORM */
   .form-overlay { display:none; position:fixed; inset:0; background:rgba(44,24,16,0.6); z-index:300; align-items:center; justify-content:center; }
@@ -708,6 +712,7 @@
       <div id="popup-goto-wrap"></div>
       <div class="popup-actions">
         <button class="btn-edit" onclick="editCurrentEntry()">✎ Modifica</button>
+        <button class="btn-copy" onclick="openCopyToTL()">⎘ Copia in...</button>
         <button class="btn-del"  onclick="deleteCurrentEntry()">✕ Elimina</button>
       </div>
     </div>
@@ -740,9 +745,13 @@
           <select class="form-select" id="f-category"></select>
         </div>
         <div class="form-group">
-          <label class="form-label">Timeline *</label>
-          <select class="form-select" id="f-timeline"></select>
+          <label class="form-label">Categoria secondaria</label>
+          <select class="form-select" id="f-category2"><option value="">— Nessuna —</option></select>
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Timeline *</label>
+        <select class="form-select" id="f-timeline"></select>
       </div>
       <!-- certezza globale rimane solo per periodi/fatti -->
       <div class="form-group" id="global-cert-group">
@@ -762,7 +771,7 @@
 
           <div class="date-block">
             <div class="date-block-header">
-              <label class="form-label" style="margin:0">Nascita</label>
+              <label class="form-label" style="margin:0">Nascita / Inizio</label>
               <div class="date-cert-row">
                 <button class="cert-btn-sm sure active"     id="cert-birth-sure"      onclick="setDateCert('birth','sure')">✓</button>
                 <button class="cert-btn-sm approx"           id="cert-birth-approx"    onclick="setDateCert('birth','approx')">~</button>
@@ -803,7 +812,7 @@
 
           <div class="date-block">
             <div class="date-block-header">
-              <label class="form-label" style="margin:0">Morte</label>
+              <label class="form-label" style="margin:0">Morte / Fine</label>
               <div class="date-cert-row">
                 <button class="cert-btn-sm sure active"     id="cert-death-sure"      onclick="setDateCert('death','sure')">✓</button>
                 <button class="cert-btn-sm approx"           id="cert-death-approx"    onclick="setDateCert('death','approx')">~</button>
@@ -1005,6 +1014,23 @@
     </div>
     <div class="newtl-footer">
       <button class="form-cancel" onclick="closeExcelModal()">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<!-- COPY TO TIMELINE MODAL -->
+<div class="newtl-overlay" id="copy-tl-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="newtl-box" onclick="event.stopPropagation()">
+    <div class="newtl-header">
+      <span class="newtl-title">COPIA IN TIMELINE</span>
+      <button class="popup-close" onclick="document.getElementById('copy-tl-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="newtl-body">
+      <p style="font-size:0.88rem;color:var(--ink);line-height:1.6">Scegli la timeline dove copiare <strong id="copy-tl-entry-name"></strong>:</p>
+      <div id="copy-tl-list" style="display:flex;flex-direction:column;gap:6px;margin-top:10px"></div>
+    </div>
+    <div class="newtl-footer">
+      <button class="form-cancel" onclick="document.getElementById('copy-tl-overlay').classList.remove('open')">Annulla</button>
     </div>
   </div>
 </div>
@@ -1372,6 +1398,7 @@ function deleteTL(id) {
 function renderCategories() {
   const list=document.getElementById('categories-list'); list.innerHTML='';
   const sel=document.getElementById('f-category'); sel.innerHTML='';
+  const sel2=document.getElementById('f-category2'); if(sel2){sel2.innerHTML='<option value="">— Nessuna —</option>';}
   const hidden=getHiddenSet(state.currentTL);
   state.categories.forEach(cat=>{
     const count=state.entries.filter(e=>e.category===cat.id&&e.timeline===state.currentTL).length;
@@ -1380,6 +1407,7 @@ function renderCategories() {
     div.innerHTML=`<div class="cat-dot" style="background:${cat.color}"></div><div class="cat-label" style="${isH?'opacity:.4':''}">${cat.name}</div><div class="cat-count">${count}</div><div class="cat-eye ${isH?'hidden':''}" onclick="toggleCat('${cat.id}',event)" title="Mostra/Nascondi">👁</div><div class="cat-action-btn" onclick="openEditCat('${cat.id}',event)" title="Modifica">✎</div><div class="cat-action-btn cat-del-btn" onclick="deleteCat('${cat.id}',event)" title="Elimina">✕</div>`;
     list.appendChild(div);
     sel.innerHTML+=`<option value="${cat.id}">${cat.name}</option>`;
+    if(sel2) sel2.innerHTML+=`<option value="${cat.id}">${cat.name}</option>`;
   });
 }
 function toggleCat(id,e) {
@@ -1672,6 +1700,10 @@ function renderTimeline() {
           });
         }
         if (e.privateNote) { const lk=document.createElement('div');lk.className='tl-lock';lk.textContent='🔒';bar.appendChild(lk); }
+        if (e.category2) {
+          const cat2Obj = state.categories.find(c=>c.id===e.category2);
+          if (cat2Obj) { const b=document.createElement('div');b.className='tl-bar-cat2';b.style.background=cat2Obj.color;b.title=cat2Obj.name;bar.appendChild(b); }
+        }
         const lbl = document.createElement('div'); lbl.className = 'tl-bar-label';
         lbl.textContent = bw > 30 ? e.name : ''; bar.appendChild(lbl);
         row.appendChild(bar);
@@ -1699,6 +1731,19 @@ function showPopup(id) {
   const badge=document.getElementById('popup-type-badge');
   badge.style.background=color;
   badge.textContent=e.type==='persona'?'👤 PERSONAGGIO':e.type==='periodo'?'⟷ PERIODO':'◆ EVENTO';
+  // Badge categoria secondaria nel popup
+  const existingBadge2 = document.getElementById('popup-cat2-badge');
+  if (existingBadge2) existingBadge2.remove();
+  if (e.category2) {
+    const cat2Obj = state.categories.find(c=>c.id===e.category2);
+    if (cat2Obj) {
+      const b2 = document.createElement('div');
+      b2.id = 'popup-cat2-badge';
+      b2.style.cssText = `display:inline-block;background:${cat2Obj.color};font-family:'Cinzel',serif;font-size:0.52rem;letter-spacing:1px;padding:2px 8px;border-radius:2px;color:#fff;margin-left:6px;`;
+      b2.textContent = cat2Obj.name;
+      badge.parentNode.insertBefore(b2, badge.nextSibling);
+    }
+  }
   const certEl=document.getElementById('popup-cert');
   if(e.type!=='persona'&&e.certainty&&e.certainty!=='sure'){
     certEl.innerHTML=`<span class="cert-badge cert-${e.certainty}">${CERT_LABELS[e.certainty]}</span>`;
@@ -1711,13 +1756,13 @@ function showPopup(id) {
     dEl.innerHTML+=`<div class="popup-date-row"><span class="popup-date-label">${label}</span><span class="popup-date-val">${v}${sym}</span></div>`;
   };
   if(e.type==='persona'){
-    addD('Nascita:',e.birthY,e.birthM,e.birthD,e.birthCert);
+    addD('Nascita / Inizio:',e.birthY,e.birthM,e.birthD,e.birthCert);
     addD('Salita al potere:',e.powerY,e.powerM,e.powerD,e.powerCert);
     addD('Rinuncia/Abdicazione:',e.resignY,e.resignM,e.resignD);
-    addD('Morte:',e.deathY,e.deathM,e.deathD,e.deathCert);
+    addD('Morte / Fine:',e.deathY,e.deathM,e.deathD,e.deathCert);
   }
-  else if(e.type==='periodo'){addD('Inizio:',e.startY,e.startM,null);addD('Fine:',e.endY,e.endM,null);}
-  else{addD('Data:',e.evY,e.evM,e.evD);}
+  else if(e.type==='periodo'){addD('Inizio:',e.startY,e.startM,e.startD||null,e.startCert);addD('Fine:',e.endY,e.endM,e.endD||null,e.endCert);}
+  else{addD('Data:',e.evY,e.evM,e.evD,e.evCert);}
   const descEl=document.getElementById('popup-desc');
   // Immagine
   const existingImg = document.getElementById('popup-img');
@@ -1781,7 +1826,7 @@ function fillForm(e) {
   setType(e.type); setCert(e.certainty||'sure');
   const sv=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v;};
   sv('f-name',e.name); sv('f-desc',e.desc); sv('f-private',e.privateNote); sv('f-biblio',e.biblio);
-  sv('f-category',e.category); sv('f-timeline',e.timeline||state.currentTL); sv('f-linked-tl',e.linkedTimeline||'');
+  sv('f-category',e.category); sv('f-category2',e.category2||''); sv('f-timeline',e.timeline||state.currentTL); sv('f-linked-tl',e.linkedTimeline||'');
   setImagePreview(e.image||null);
   if(e.type==='persona'){
     sv('p-birth-y',e.birthY);sv('p-birth-m',e.birthM);sv('p-birth-d',e.birthD);
@@ -1832,7 +1877,7 @@ function saveEntry() {
   if(!cat){showToast('Seleziona una categoria!');return;}
   const gv=id=>{const el=document.getElementById(id);return el?(el.value||''):'';}
   const gn=id=>{const v=gv(id);return v!==''?parseFloat(v):null;}
-  let entry={id:editingId||('e_'+Date.now()),name,category:cat,type:currentType,timeline:tl,certainty:currentCert,desc:gv('f-desc'),privateNote:gv('f-private'),biblio:gv('f-biblio'),linkedTimeline:gv('f-linked-tl')||null,image:_currentImageData||null};
+  let entry={id:editingId||('e_'+Date.now()),name,category:cat,category2:gv('f-category2')||null,type:currentType,timeline:tl,certainty:currentCert,desc:gv('f-desc'),privateNote:gv('f-private'),biblio:gv('f-biblio'),linkedTimeline:gv('f-linked-tl')||null,image:_currentImageData||null};
   if(currentType==='persona'){
     Object.assign(entry,{
       birthY:gn('p-birth-y'),birthM:gv('p-birth-m'),birthD:gn('p-birth-d'),birthCert:_dateCerts.birth,
@@ -2164,18 +2209,23 @@ function readExcelFile(file){
 
           const gn = key => { const v=r[key]; if(v===undefined||v==='')return null; const n=parseFloat(String(v).replace(',','.')); return isNaN(n)?null:n; };
           const gs = key => { const v=r[key]; if(v===undefined||v==='')return null; const n=parseInt(String(v)); return isNaN(n)?null:String(n); };
+          const gc = key => r[key] || '';
 
           // Determina tipo: se manca usa euristica dai campi presenti
           let finalType = type;
           if (!finalType || finalType === '') {
-            // foglio Personaggi non ha colonna Tipo: usa euristica
-            if (r['anno_potere'] !== undefined || r['anno_nascita'] !== undefined) finalType = 'persona';
-            else if (r['anno_fine'] !== undefined) finalType = 'periodo';
+            if (r['anno_potere'] !== undefined || r['anno_inizio'] !== undefined || r['anno_nascita'] !== undefined) {
+              // se ha anno_fine ma non anno_potere → periodo
+              if ((r['anno_fine']||r['anno_morte']) && !r['anno_potere'] && !r['anno_nascita']) finalType = 'periodo';
+              else finalType = 'persona';
+            }
+            else if (r['anno_evento'] !== undefined) finalType = 'fatto';
             else finalType = 'fatto';
           }
 
-          // ID stabile basato su nome+categoria+anno: stessa voce = stesso ID ogni importazione
-          const stableKey = (name + '|' + cat + '|' + (r['anno_potere']||r['anno_nascita']||r['anno_inizio']||r['anno_evento']||'')).toLowerCase().replace(/\s+/g,'_');
+          // ID stabile: nome + categoria + anno chiave
+          const keyYear = r['anno_inizio']||r['anno_nascita']||r['anno_potere']||r['anno_evento']||'';
+          const stableKey = (name+'|'+cat+'|'+keyYear).toLowerCase().replace(/\s+/g,'_');
           const stableId = 'xl_' + stableKey.split('').reduce((h,c)=>(Math.imul(31,h)+c.charCodeAt(0))|0,0).toString(36).replace('-','n');
 
           let entry = {
@@ -2186,25 +2236,38 @@ function readExcelFile(file){
           };
 
           if (finalType === 'persona') {
+            // Supporta sia vecchio formato (anno_nascita/morte) che nuovo (anno_inizio/fine)
             Object.assign(entry, {
-              birthY: gn('anno_nascita'),  birthM: gs('mese_nascita'),  birthD: gn('giorno_nascita'), birthCert: r['certezza_nascita'] || cert,
-              powerY: gn('anno_potere'),   powerM: gs('mese_potere'),   powerD: null,                 powerCert: r['certezza_potere']  || cert,
-              resignY:gn('anno_rinuncia'), resignM:gs('mese_rinuncia'), resignD:null,
-              deathY: gn('anno_morte'),    deathM: gs('mese_morte'),    deathD: gn('giorno_morte'),   deathCert: r['certezza_morte']   || cert,
+              birthY: gn('anno_inizio')  || gn('anno_nascita'),
+              birthM: gs('mese_inizio')  || gs('mese_nascita'),
+              birthD: gn('giorno_inizio')|| gn('giorno_nascita'),
+              birthCert: gc('certezza_inizio') || gc('certezza_nascita') || cert,
+              powerY: gn('anno_potere'),  powerM: gs('mese_potere'),  powerD: gn('giorno_potere'),
+              powerCert: gc('certezza_potere') || cert,
+              resignY: gn('anno_rinuncia'), resignM: gs('mese_rinuncia'), resignD: gn('giorno_rinuncia'),
+              deathY: gn('anno_fine')    || gn('anno_morte'),
+              deathM: gs('mese_fine')    || gs('mese_morte'),
+              deathD: gn('giorno_fine')  || gn('giorno_morte'),
+              deathCert: gc('certezza_fine') || gc('certezza_morte') || cert,
             });
             if (!entry.birthY && !entry.powerY) {
-              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno nascita o Anno potere — saltata`);
+              warnings.push(`Riga ${idx+2} ("${name}"): manca Anno inizio/nascita o Anno potere — saltata`);
               return;
             }
           } else if (finalType === 'periodo') {
             entry.startY = gn('anno_inizio'); entry.startM = gs('mese_inizio'); entry.startD = gn('giorno_inizio');
-            entry.endY   = gn('anno_fine');   entry.endM   = gs('mese_fine');
+            entry.startCert = gc('certezza_inizio') || cert;
+            entry.endY   = gn('anno_fine');   entry.endM   = gs('mese_fine');   entry.endD   = gn('giorno_fine');
+            entry.endCert = gc('certezza_fine') || cert;
             if (!entry.startY || !entry.endY) {
               warnings.push(`Riga ${idx+2} ("${name}"): manca Anno inizio o Anno fine — saltata`);
               return;
             }
           } else {
-            entry.evY = gn('anno_evento'); entry.evM = gs('mese_evento') || gs('mese_inizio'); entry.evD = null;
+            entry.evY    = gn('anno_evento');
+            entry.evM    = gs('mese_evento');
+            entry.evD    = gn('giorno_evento');
+            entry.evCert = gc('certezza_evento') || cert;
             if (!entry.evY) {
               warnings.push(`Riga ${idx+2} ("${name}"): manca Anno evento — saltata`);
               return;
@@ -2246,6 +2309,7 @@ function doExcelMerge(){
     if (!state.timelines.find(t => t.id === tl.id)) state.timelines.push(tl);
   });
   let added=0, updated=0;
+  const generaleId = state.timelines.find(t=>t.name.toLowerCase()==='generale')?.id;
   entries.forEach(e=>{
     const idx = state.entries.findIndex(x=>x.id===e.id);
     if(idx !== -1){
@@ -2253,6 +2317,13 @@ function doExcelMerge(){
       updated++;
     } else {
       state.entries.push(e); added++;
+    }
+    // Copia automatica nella timeline Generale (se la voce non è già lì)
+    if (generaleId && e.timeline !== generaleId) {
+      const copyId = e.id + '_copy_' + generaleId;
+      if (!state.entries.find(x=>x.id===copyId)) {
+        state.entries.push({ ...e, id:copyId, timeline:generaleId, privateNote:'' });
+      }
     }
   });
   document.getElementById('import-excel-overlay').classList.remove('open');
@@ -2310,7 +2381,35 @@ function doImportMerge(){
   }
 }
 
-// ── EXPORT MENU ──
+// ── COPIA IN TIMELINE ──
+function openCopyToTL() {
+  const e = state.entries.find(x=>x.id===popupEntryId); if(!e) return;
+  document.getElementById('copy-tl-entry-name').textContent = e.name;
+  const list = document.getElementById('copy-tl-list'); list.innerHTML = '';
+  state.timelines.filter(t=>t.id!==e.timeline).forEach(tl=>{
+    const btn = document.createElement('button');
+    btn.style.cssText='background:var(--ink);color:var(--gold-light);border:1px solid var(--gold);font-family:Cinzel,serif;font-size:0.62rem;letter-spacing:1px;padding:10px 14px;border-radius:3px;cursor:pointer;text-align:left;transition:background .15s';
+    btn.textContent = '✦ ' + tl.name;
+    btn.onmouseover=()=>btn.style.background='#ffffff18';
+    btn.onmouseout=()=>btn.style.background='var(--ink)';
+    btn.onclick = () => copyEntryToTL(e.id, tl.id);
+    list.appendChild(btn);
+  });
+  document.getElementById('copy-tl-overlay').classList.add('open');
+}
+function copyEntryToTL(entryId, targetTLId) {
+  const e = state.entries.find(x=>x.id===entryId); if(!e) return;
+  const newId = e.id + '_copy_' + targetTLId;
+  // Se esiste già aggiorna, altrimenti crea
+  const existingIdx = state.entries.findIndex(x=>x.id===newId);
+  const copy = { ...e, id:newId, timeline:targetTLId, privateNote:'' };
+  if (existingIdx !== -1) state.entries[existingIdx] = copy;
+  else state.entries.push(copy);
+  document.getElementById('copy-tl-overlay').classList.remove('open');
+  save(); renderCategories(); renderTimeline(); updateFilterChips();
+  const tlName = state.timelines.find(t=>t.id===targetTLId)?.name || '';
+  showToast(`"${e.name}" copiato in ${tlName}`);
+}
 function toggleExportMenu() {
   document.getElementById('export-menu').classList.toggle('open');
 }
